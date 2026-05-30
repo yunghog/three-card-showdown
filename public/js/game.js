@@ -6,12 +6,8 @@ let currentRoom = null;
 let gameState = null;
 let selectedCards = []; // Tracks ids of hand cards selected to play
 
-// DOM elements references
-const lobbyScreen = document.getElementById("lobby-screen");
+// DOM elements references (Strictly Gameplay Arena Nodes)
 const gameScreen = document.getElementById("game-screen");
-const joinForm = document.getElementById("join-form");
-const usernameInput = document.getElementById("username");
-const roomIdInput = document.getElementById("room-id");
 
 const displayRoomId = document.getElementById("display-room-id");
 const displayRoundNum = document.getElementById("display-round-num");
@@ -37,17 +33,6 @@ const modalTitle = document.getElementById("modal-title");
 const modalStatus = document.getElementById("modal-status");
 const modalTableBody = document.getElementById("modal-table-body");
 const nextRoundBtn = document.getElementById("next-round-btn");
-
-// Form Submit: Join Room
-joinForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const username = usernameInput.value.trim();
-  const roomId = roomIdInput.value.trim();
-
-  if (username && roomId) {
-    socket.emit("joinRoom", { username, roomId });
-  }
-});
 
 // Action: Start Game Click
 startGameBtn.addEventListener("click", () => {
@@ -79,33 +64,43 @@ showBtn.addEventListener("click", () => {
 nextRoundBtn.addEventListener("click", () => {
   resultModal.classList.add("hidden");
   if (gameState && gameState.status === "game_over") {
-    // Reset back to lobby
-    window.location.reload();
+    // Redirection back to Landing Page lobby on game over
+    window.location.href = "/";
   } else {
     // Round is ended, host gets option to trigger start next round
     socket.emit("startGame", currentRoom);
   }
 });
 
-// Listener: Connection Establish
+// Listener: Connection Establish (Parameter-Based Auto-Join)
 socket.on("connect", () => {
   myId = socket.id;
-  console.log("Connected to server. ID:", myId);
+  console.log("Connected to arena server. ID:", myId);
+
+  // Ingest URL credentials to trigger automatic room joining
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get("username");
+  const roomId = urlParams.get("room");
+
+  if (username && roomId) {
+    socket.emit("joinRoom", { username, roomId });
+  } else {
+    // Fallback: safe redirect to main entry page if credentials missing
+    window.location.href = "/";
+  }
 });
 
 // Listener: Error Messaging
 socket.on("errorMsg", (msg) => {
   alert(msg);
+  // Redirect on critical error (like game already started)
+  window.location.href = "/";
 });
 
 // Listener: Central State Synced from Server
 socket.on("gameStateUpdate", (state) => {
   gameState = state;
   currentRoom = state.id;
-
-  // Swap lobby to active match layout
-  lobbyScreen.classList.add("hidden");
-  gameScreen.classList.remove("hidden");
 
   // Sync Header Data
   displayRoomId.textContent = state.id;
@@ -143,14 +138,15 @@ socket.on("gameStateUpdate", (state) => {
   if (me) {
     myUsernameDisplay.textContent = me.username;
     myScoreDisplay.textContent = `(${me.totalScore} Pts)`;
+
     if (me.eliminated) {
-      myBadge.classList.add("eliminated");
+      myBadge.className = "player-badge eliminated";
       turnIndicator.textContent = "You have been Eliminated.";
     } else if (isMyTurn) {
-      myBadge.classList.add("active");
+      myBadge.className = "player-badge active";
       turnIndicator.textContent = "Your Turn!";
     } else {
-      myBadge.classList.remove("active");
+      myBadge.className = "player-badge";
       turnIndicator.textContent = "Opponent Turn...";
     }
 
@@ -192,7 +188,7 @@ function renderTopDiscardCard(card) {
 }
 
 // Helper: Build Single Card Element
-function createCardDOM(card, interactable = false) {
+function createCardDOM(card) {
   const cardDiv = document.createElement("div");
 
   if (card.id === "hidden") {
@@ -265,25 +261,21 @@ function renderMyHand(hand, isMyTurn) {
     const cardEl = createCardDOM(card);
 
     if (isMyTurn) {
-      // Setup toggling matching logic checks
       cardEl.addEventListener("click", () => {
         const cardId = card.id;
         const index = selectedCards.indexOf(cardId);
 
         if (index > -1) {
-          // Deselect
           selectedCards.splice(index, 1);
           cardEl.classList.remove("selected");
         } else {
-          // Rule validation checks: Cards selected must have identical ranks
           if (selectedCards.length > 0) {
             const sampleCardId = selectedCards[0];
             const sampleRank = hand.find((c) => c.id === sampleCardId).rank;
             if (card.rank !== sampleRank) {
-              // Clear previous list if a completely different rank is selected
               selectedCards.forEach((id) => {
                 const el = myHandContainer.querySelector(
-                  `[data-card-id="${id}"]`,
+                  `[data-card-id="${id}"]`
                 );
                 if (el) el.classList.remove("selected");
               });
@@ -368,3 +360,29 @@ function renderShowResultsModal(state) {
 
   resultModal.classList.remove("hidden");
 }
+
+// Collapsible Logs Toggle Logic
+const logsPanel = document.getElementById("logs-panel");
+const toggleLogsBtn = document.getElementById("toggle-logs-btn");
+const logsToggleIcon = document.getElementById("logs-toggle-icon");
+const logBoxElement = document.getElementById("log-box");
+
+if (toggleLogsBtn && logsPanel && logsToggleIcon) {
+  toggleLogsBtn.addEventListener("click", () => {
+    const isCollapsed = logsPanel.classList.contains("collapsed");
+    if (isCollapsed) {
+      logsPanel.classList.remove("collapsed");
+      logsToggleIcon.textContent = "▼";
+      // Auto-scroll to bottom after opening
+      setTimeout(() => {
+        if (logBoxElement) {
+          logBoxElement.scrollTop = logBoxElement.scrollHeight;
+        }
+      }, 150);
+    } else {
+      logsPanel.classList.add("collapsed");
+      logsToggleIcon.textContent = "▲";
+    }
+  });
+}
+

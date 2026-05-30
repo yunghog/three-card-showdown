@@ -3,199 +3,231 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Three Card Points Game</title>
+    <title>Three Card Showdown | Premium Multiplayer Points Game</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
-  <body
-    class="bg-dark text-light font-sans m-0 p-0 flex flex-col justify-between h-screen"
-  >
-    <!-- Lobby Interface Screen -->
-    <div
-      id="lobby-screen"
-      class="flex-col items-center justify-center h-full gap-2 p-2"
-    >
-      <div class="panel w-full max-w-md text-center">
-        <h1 class="text-primary m-0 mb-1">🎴 Three Card Points</h1>
-        <p class="text-muted mb-2">
-          Low score wins. Strategy and matching rule is key.
-        </p>
+  <body class="bg-dark text-light">
+    <!-- Ambient Particle Overlay Canvas -->
+    <canvas id="ambient-canvas" class="ambient-canvas"></canvas>
 
-        <form id="join-form" class="flex flex-col gap-1">
-          <div class="input-group">
-            <label for="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              placeholder="Type your username"
-              required
-              autocomplete="off"
-            />
-          </div>
-          <div class="input-group">
-            <label for="room-id">Room ID Code</label>
-            <input
-              type="text"
-              id="room-id"
-              placeholder="Enter Room Code"
-              required
-              autocomplete="off"
-            />
-          </div>
-          <button type="submit" class="btn btn-primary w-full py-1">
-            Join Game Room
+    <!-- Sticky Glassmorphic Header Navigation -->
+    <header class="sticky-header">
+      <div class="header-container">
+        <div class="logo">
+          <!-- Dynamic rendering target -->
+        </div>
+        <nav class="nav-menu" id="nav-menu">
+          <!-- Dynamic navigation links generated here -->
+        </nav>
+        <div class="header-actions">
+          <button class="btn btn-primary btn-gold play-now-cta">Play Now</button>
+          <button class="mobile-nav-toggle" id="mobile-nav-btn" aria-label="Toggle Menu">
+            <span></span><span></span><span></span>
           </button>
-        </form>
+        </div>
       </div>
-    </div>
+    </header>
 
-    <!-- Game Play Arena Screen -->
-    <div
-      id="game-screen"
-      class="hidden h-full flex-col p-1 relative overflow-hidden"
-    >
-      <!-- Top Bar State / Scoreboard Header -->
-      <header
-        class="flex justify-between items-center bg-panel p-1 rounded border-b gap-1"
-      >
-        <div>
-          <span class="badge badge-accent"
-            >Room: <strong id="display-room-id"></strong
-          ></span>
-          <span class="badge"
-            >Round: <strong id="display-round-num">1</strong></span
-          >
-        </div>
-        <div class="flex gap-1" id="top-scoreboard">
-          <!-- Live dynamic scores populated here -->
-        </div>
-        <div>
-          <button id="start-game-btn" class="btn btn-success hidden">
-            Start Game
-          </button>
-        </div>
-      </header>
-
-      <!-- Center Arena Field Grid -->
-      <main
-        class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-1 my-1 overflow-hidden"
-      >
-        <!-- Opponent Players Area -->
-        <section
-          id="opponents-panel"
-          class="md:col-span-3 flex flex-col justify-center gap-1 bg-table rounded p-1 relative border"
-        >
-          <!-- Rendered opponent seating layout -->
-          <div
-            id="opponents-list"
-            class="flex justify-around items-center h-full flex-wrap gap-1"
-          ></div>
-
-          <!-- Center Board Stack (Draw Deck & Discard pile side-by-side) -->
-          <div class="flex justify-center items-center gap-3 my-auto z-10">
-            <!-- Draw Pile -->
-            <div class="text-center">
-              <div
-                class="deck-stack card-back flex items-center justify-center text-bold"
-              >
-                <span id="deck-card-count">0</span>
-              </div>
-              <div class="text-small text-muted mt-0-5">Draw Deck</div>
-            </div>
-
-            <!-- Discard Pile -->
-            <div class="text-center">
-              <div
-                id="discard-pile-container"
-                class="deck-stack flex items-center justify-center bg-panel border rounded"
-              >
-                <!-- Dynamically rendered top discard card -->
-              </div>
-              <div class="text-small text-muted mt-0-5">Discard Pile</div>
+    <!-- Premium Animated Landing Page Wrapper -->
+    <div id="landing-screen" class="landing-screen">
+      <!-- Hero Section -->
+      <section id="hero" class="hero-section flex items-center justify-center relative">
+        <div class="hero-glow-ring ring-1"></div>
+        <div class="hero-glow-ring ring-2"></div>
+        <div class="hero-container grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+          <div class="hero-content scroll-reveal">
+            <div class="badge badge-accent mb-1 px-2 py-0-5 text-bold">Loading Arena Details...</div>
+            <h1 class="hero-title m-0 mb-1">Loading...</h1>
+            <p class="hero-subtitle mb-2">Please wait while the deck is prepared...</p>
+            <div class="flex gap-1 flex-wrap">
+              <button class="btn btn-primary btn-gold btn-large play-now-cta pulse-glow">Play Now</button>
+              <a href="#how-to-play" class="btn btn-secondary btn-large">Learn Rules</a>
             </div>
           </div>
-        </section>
 
-        <!-- Logs / Actions Chat Panel -->
-        <aside
-          class="md:col-span-1 bg-panel border rounded flex flex-col justify-between overflow-hidden"
-        >
-          <div class="p-1 border-b text-bold text-primary">Game Logs</div>
-          <div
-            id="log-box"
-            class="flex-1 p-1 overflow-y-auto text-small text-muted"
-          >
-            <!-- Live updates written here -->
-          </div>
-        </aside>
-      </main>
+          <!-- Hero Graphics Canvas with Floating Elements -->
+          <div class="hero-graphics relative flex justify-center items-center scroll-reveal">
+            <div class="poker-table-felt">
+              <div class="table-inner-glow"></div>
+            </div>
+            
+            <!-- Floating Playing Cards (CSS 3D Transforms) -->
+            <div class="floating-card-3d card-ace float-anim-1">
+              <div class="card suit-red">
+                <div class="card-top"><span>A</span><span>♥</span></div>
+                <div class="card-suit-big">♥</div>
+                <div class="card-bottom"><span>♥</span><span>A</span></div>
+              </div>
+            </div>
+            
+            <div class="floating-card-3d card-king float-anim-2">
+              <div class="card suit-black">
+                <div class="card-top"><span>K</span><span>♠</span></div>
+                <div class="card-suit-big">♠</div>
+                <div class="card-bottom"><span>♠</span><span>K</span></div>
+              </div>
+            </div>
 
-      <!-- Bottom Active Player Tray Panel -->
-      <footer
-        class="bg-panel p-1 rounded border flex flex-col md:flex-row justify-between items-center gap-1 z-20"
-      >
-        <div class="flex items-center gap-1">
-          <div class="player-badge active" id="my-badge">
-            <span class="text-bold" id="my-username">You</span>
-            <span class="text-small text-accent ml-0-5" id="my-score-display"
-              >(0 Pts)</span
-            >
-          </div>
-          <div class="text-small text-muted italic" id="turn-indicator">
-            Waiting...
+            <div class="floating-card-3d card-jack float-anim-3">
+              <div class="card suit-red">
+                <div class="card-top"><span>J</span><span>♦</span></div>
+                <div class="card-suit-big">♦</div>
+                <div class="card-bottom"><span>♦</span><span>J</span></div>
+              </div>
+            </div>
+
+            <!-- Floating 3D Poker Chips -->
+            <div class="floating-chip chip-gold spin-anim-1">
+              <div class="chip-inner"><span>100</span></div>
+            </div>
+            <div class="floating-chip chip-black spin-anim-2">
+              <div class="chip-inner"><span>50</span></div>
+            </div>
+            <div class="floating-chip chip-red spin-anim-3">
+              <div class="chip-inner"><span>25</span></div>
+            </div>
           </div>
         </div>
+      </section>
 
-        <!-- Selected Active Cards Tray -->
-        <div id="my-hand-container" class="flex gap-1 justify-center py-0-5">
-          <!-- Self cards will render here -->
+      <!-- Game Features Section -->
+      <section id="features" class="features-section p-2 relative">
+        <div class="section-header text-center scroll-reveal">
+          <span class="text-gold text-bold uppercase tracking-wider text-small">Engine Systems</span>
+          <h2 class="m-0 mb-1 font-serif text-large">Exclusive Game Features</h2>
+          <div class="section-divider"></div>
         </div>
+        <div class="features-grid grid grid-cols-1 md:grid-cols-3 gap-2 mt-2" id="features-grid">
+          <!-- Populated Dynamically -->
+        </div>
+      </section>
 
-        <!-- Interaction Controls -->
-        <div class="flex gap-1">
-          <button id="play-btn" class="btn btn-primary" disabled>
-            Play Selected
-          </button>
-          <button id="show-btn" class="btn btn-danger" disabled>
-            Call SHOW
-          </button>
+      <!-- How To Play Section -->
+      <section id="how-to-play" class="rules-section p-2 relative bg-panel-dark">
+        <div class="section-header text-center scroll-reveal">
+          <span class="text-gold text-bold uppercase tracking-wider text-small">Player Guidelines</span>
+          <h2 class="m-0 mb-1 font-serif text-large">How To Play</h2>
+          <div class="section-divider"></div>
+        </div>
+        <div class="timeline-container mt-2" id="timeline-container">
+          <!-- Populated Dynamically -->
+        </div>
+      </section>
+
+      <!-- Leaderboard Preview Section -->
+      <section id="leaderboard" class="leaderboard-section p-2 relative">
+        <div class="section-header text-center scroll-reveal">
+          <span class="text-gold text-bold uppercase tracking-wider text-small">Global Champions</span>
+          <h2 class="m-0 mb-1 font-serif text-large">Leaderboard Standings</h2>
+          <div class="section-divider"></div>
+        </div>
+        <div class="leaderboard-table-container glass-panel mt-2 scroll-reveal">
+          <table class="scoreboard-table w-full text-left">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Champion Name</th>
+                <th>Tournaments Won</th>
+                <th>SHOW Accuracy</th>
+                <th>Avg Round Score</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-table-body">
+              <!-- Populated Dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Testimonials Section -->
+      <section id="testimonials" class="testimonials-section p-2 relative bg-panel-dark">
+        <div class="section-header text-center scroll-reveal">
+          <span class="text-gold text-bold uppercase tracking-wider text-small">Player Testimonials</span>
+          <h2 class="m-0 mb-1 font-serif text-large">Reviews from the Felt</h2>
+          <div class="section-divider"></div>
+        </div>
+        <div class="features-grid grid grid-cols-1 md:grid-cols-3 gap-2 mt-2" id="testimonials-grid">
+          <!-- Populated Dynamically -->
+        </div>
+      </section>
+
+      <!-- FAQ Section -->
+      <section id="faq" class="faq-section p-2 relative">
+        <div class="section-header text-center scroll-reveal">
+          <span class="text-gold text-bold uppercase tracking-wider text-small">Got Questions?</span>
+          <h2 class="m-0 mb-1 font-serif text-large">Frequently Asked Questions</h2>
+          <div class="section-divider"></div>
+        </div>
+        
+        <div class="faq-accordion mt-2 max-w-md m-auto flex flex-col gap-1" id="faq-accordion">
+          <!-- Populated Dynamically -->
+        </div>
+      </section>
+
+      <!-- Bottom Call To Action Banner -->
+      <section class="cta-banner-section p-2 text-center relative scroll-reveal">
+        <div class="cta-banner glass-panel max-w-md m-auto p-2 relative overflow-hidden">
+          <div class="cta-glow-decor"></div>
+          <h2 class="text-gold-gradient m-0 mb-1">Loading Arena Banner...</h2>
+          <p class="text-muted mb-2 text-small">Ready when you are...</p>
+          <button class="btn btn-primary btn-gold btn-large play-now-cta pulse-glow">Enter the Arena</button>
+        </div>
+      </section>
+
+      <!-- Public Footer -->
+      <footer class="public-footer p-2 text-center border-t">
+        <div class="footer-container max-w-md m-auto flex flex-col gap-1">
+          <div class="logo footer-logo justify-center">
+            <!-- Dynamic Footer Logo -->
+          </div>
+          <div class="footer-links flex justify-center gap-2">
+            <!-- Dynamic Navigation Links -->
+          </div>
+          <p class="text-muted text-small m-0 mt-1" id="footer-copyright">
+            Loading copyrights...
+          </p>
         </div>
       </footer>
     </div>
 
-    <!-- Show Results Modal Screen Overlay -->
-    <div id="result-modal" class="modal hidden">
-      <div class="modal-content">
-        <h2 id="modal-title" class="text-center m-0 text-primary">
-          Show Results
-        </h2>
-        <p id="modal-status" class="text-center text-muted mb-2"></p>
+    <!-- Lobby/Authentication Glassmorphic Modal Overlay (Toggled via CTA Buttons) -->
+    <div id="lobby-screen" class="modal-overlay hidden">
+      <div class="lobby-modal-content glass-panel">
+        <button class="close-modal-btn" id="close-lobby-btn" aria-label="Close Modal">&times;</button>
+        <div class="text-center">
+          <h2 class="text-gold-gradient m-0 mb-0-5">🎴 Enter Showdown Arena</h2>
+          <p class="text-muted text-small mb-2">Create or join a room code to begin matches</p>
 
-        <table class="scoreboard-table w-full text-left mb-2">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Cards Left</th>
-              <th>Hand Value</th>
-              <th>Round Score Penalty</th>
-              <th>Total Game Score</th>
-            </tr>
-          </thead>
-          <tbody id="modal-table-body">
-            <!-- Populated row dynamic values -->
-          </tbody>
-        </table>
-
-        <div class="flex justify-center">
-          <button id="next-round-btn" class="btn btn-primary px-2">
-            Proceed
-          </button>
+          <form id="join-form" class="flex flex-col gap-1">
+            <div class="input-group">
+              <label for="username">User Identity Profile</label>
+              <input
+                type="text"
+                id="username"
+                placeholder="Type your username"
+                required
+                autocomplete="off"
+              />
+            </div>
+            <div class="input-group">
+              <label for="room-id">Active Room Code Key</label>
+              <input
+                type="text"
+                id="room-id"
+                placeholder="Enter Room Code"
+                required
+                autocomplete="off"
+              />
+            </div>
+            <button type="submit" class="btn btn-primary btn-gold w-full py-1 mt-1 text-bold pulse-glow">
+              Join Game Room
+            </button>
+          </form>
         </div>
       </div>
     </div>
 
-    <!-- Socket IO Client Script Link -->
-    <script src="/socket.io/socket.io.js"></script>
-    <!-- Modular JS Script Entry -->
-    <script src="js/game.js" type="module"></script>
+    <!-- Modular JS Script Entry (Main Landing Visual Engine) -->
+    <script src="js/main.js" type="module"></script>
   </body>
 </html>
