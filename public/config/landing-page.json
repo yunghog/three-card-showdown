@@ -1,0 +1,202 @@
+{
+  "sectionsVisibility": {
+    "hero": true,
+    "features": true,
+    "howToPlay": true,
+    "leaderboard": false,
+    "testimonials": false,
+    "faq": true,
+    "ctaBanner": true
+  },
+  "branding": {
+    "logoEmoji": "🎴",
+    "logoTextPrefix": "Three Card ",
+    "logoTextHighlight": "Showdown",
+    "badgeText": "🎴 Authoritative Turn Arena",
+    "heroTitlePrefix": "The Ultimate ",
+    "heroTitleHighlight": "Points Showdown",
+    "heroSubtitle": "Lowest score wins. Drop identical ranks to skip drawings. Suffer steep penalties on wrong SHOW calls. Step into the next generation of strategic card action.",
+    "playNowButtonText": "Play Now",
+    "learnMoreButtonText": "Learn Rules",
+    "ctaBannerTitle": "Ready to Claim the Deck?",
+    "ctaBannerDescription": "Join thousands of active strategic minds. Create a lobby, invite your friends, and master the points matching rule.",
+    "ctaBannerButtonText": "Enter the Arena"
+  },
+  "navigation": [
+    {
+      "name": "Home",
+      "path": "#hero"
+    },
+    {
+      "name": "Features",
+      "path": "#features"
+    },
+    {
+      "name": "How to Play",
+      "path": "#how-to-play"
+    },
+    {
+      "name": "FAQ",
+      "path": "#faq"
+    }
+  ],
+  "features": [
+    {
+      "icon": "🛡️",
+      "title": "Authoritative State Sync",
+      "description": "Zero client-side deck snooping. Player hands are fully obfuscated on the server. Low latency Socket.io ensures real-time updates are perfectly synced."
+    },
+    {
+      "icon": "⚡",
+      "title": "Matching Draw Advantage",
+      "description": "Discard up to 3 cards of the same rank. If it matches the immediate previous play or the top discard card, draw 0 cards. Strategy rewards the matching mind."
+    },
+    {
+      "icon": "🔥",
+      "title": "Stakes-Heavy 'SHOW' Penalty",
+      "description": "Call SHOW on your turn to end the round. If an opponent holds a strictly lower hand, you inherit a crushing 30-point penalty. Perfect calculation is key."
+    }
+  ],
+  "howToPlaySteps": [
+    {
+      "step": 1,
+      "title": "🃏 Game Setup & Objective",
+      "description": "The game uses a standard 52-card deck without Jokers. Each player receives 3 cards, and 1 card is placed face-up to start the discard pile. The remaining cards form the draw deck. Your goal is to finish each round with the lowest possible point total in your hand and avoid accumulating 100 penalty points across multiple rounds."
+    },
+    {
+      "step": 2,
+      "title": "🔢 Learn Card Values",
+      "description": "Aces are worth only 1 point. Number cards (2-10) are worth their face value. Jacks, Queens, and Kings are worth 10 points each. Your hand score is the sum of all cards currently in your hand. Lower scores are always better."
+    },
+    {
+      "step": 3,
+      "title": "🎯 Play Cards On Your Turn",
+      "description": "On your turn, you must discard cards from your hand. You may discard a single card, two cards of the same rank, or all three cards if they share the same rank. Strategic discarding helps reduce your score and may also reduce the number of cards you hold."
+    },
+    {
+      "step": 4,
+      "title": "⚡ Matching Rule",
+      "description": "If the card you discard matches the rank of the top card on the discard pile or matches the card played by the previous player, you do not need to draw a replacement card. This is one of the most powerful mechanics in the game because it allows you to shrink your hand size and reduce future point totals."
+    },
+    {
+      "step": 5,
+      "title": "📥 Drawing Cards",
+      "description": "If your discarded card does not match the required rank, you must draw 1 card from the draw deck. Even when you discard 2 or 3 matching cards together, you only draw a maximum of 1 replacement card. If the discard also satisfies the matching rule, you draw nothing at all."
+    },
+    {
+      "step": 6,
+      "title": "🎴 Double & Triple Discards",
+      "description": "Holding multiple cards of the same rank is a major advantage. You may discard 2 matching cards together or all 3 matching cards at once. This allows you to reduce your hand quickly and potentially set up a low score before calling SHOW."
+    },
+    {
+      "step": 7,
+      "title": "🛑 Calling SHOW",
+      "description": "Instead of playing a card, you may call SHOW on your turn when you believe your score is the lowest among all players. Once SHOW is called, every player immediately reveals their hand and scores are calculated."
+    },
+    {
+      "step": 8,
+      "title": "✅ Valid SHOW",
+      "description": "A SHOW is considered valid if your score is lower than every other player or tied for the lowest score. Equal lowest scores are allowed. The round ends immediately and all players receive penalty points equal to the value of the cards remaining in their hand."
+    },
+    {
+      "step": 9,
+      "title": "❌ Wrong SHOW",
+      "description": "If any player has a lower score than the player who called SHOW, the SHOW is invalid. This is called a Wrong Show. The player who called it receives a fixed 30-point penalty regardless of their actual hand value. Use SHOW carefully because one mistake can change the outcome of the game."
+    },
+    {
+      "step": 10,
+      "title": "🏆 Winning The Round",
+      "description": "Each round ends after a Valid Show or Wrong Show. Scores are added to each player's cumulative total. A fresh deck is shuffled and a new round begins."
+    },
+    {
+      "step": 11,
+      "title": "💀 Elimination Rule",
+      "description": "The game continues across multiple rounds. Once a player's cumulative score reaches or exceeds 100 points, that player is eliminated from the match. The last remaining player who stays below the limit wins the game."
+    },
+    {
+      "step": 12,
+      "title": "🧠 Strategy Tips",
+      "description": "Keep low-value cards such as Aces, 2s and 3s whenever possible. Look for opportunities to discard pairs and triples. Watch the discard pile carefully to take advantage of the matching rule. Do not rush to call SHOW unless you are confident that no other player has an equal or lower score."
+    }
+  ],
+  "leaderboard": [
+    {
+      "rank": "🥇 1st",
+      "name": "RoyalFlush_Sam",
+      "won": "482 Wins",
+      "accuracy": "92.4%",
+      "score": "8.5 Pts",
+      "cssClass": "rank-gold"
+    },
+    {
+      "rank": "🥈 2nd",
+      "name": "WildCard_Alexa",
+      "won": "412 Wins",
+      "accuracy": "87.1%",
+      "score": "10.2 Pts",
+      "cssClass": "rank-silver"
+    },
+    {
+      "rank": "🥉 3rd",
+      "name": "Showdown_King",
+      "won": "355 Wins",
+      "accuracy": "84.5%",
+      "score": "11.0 Pts",
+      "cssClass": "rank-bronze"
+    },
+    {
+      "rank": "4th",
+      "name": "AceOfSpades",
+      "won": "289 Wins",
+      "accuracy": "81.2%",
+      "score": "12.8 Pts",
+      "cssClass": ""
+    },
+    {
+      "rank": "5th",
+      "name": "LuckyJoker",
+      "won": "210 Wins",
+      "accuracy": "79.8%",
+      "score": "13.5 Pts",
+      "cssClass": ""
+    }
+  ],
+  "testimonials": [
+    {
+      "rating": "⭐⭐⭐⭐⭐",
+      "quote": "The matching rule completely changes standard card game mechanics. Bypassing draws by timing card ranks makes this incredibly deep!",
+      "author": "Dealer_Jack"
+    },
+    {
+      "rating": "⭐⭐⭐⭐⭐",
+      "quote": "Calling a wrong SHOW is absolutely brutal but extremely hilarious. Our game nights have never been this tense. Highly recommended!",
+      "author": "BluffQueen"
+    },
+    {
+      "rating": "⭐⭐⭐⭐⭐",
+      "quote": "Visually stunning UI and perfect execution on synchronization. Absolutely no delays, and the authoritative rules work flawlessly.",
+      "author": "CardCounter_Max"
+    }
+  ],
+  "faqs": [
+    {
+      "question": "What is the core matching rule?",
+      "answer": "If the rank of the cards you play matches either the top card on the discard pile *before* your turn or the rank discarded by the immediate previous player, you draw zero cards. Otherwise, you must draw one card."
+    },
+    {
+      "question": "What happens on a wrong SHOW call?",
+      "answer": "If you call SHOW but another player has a hand score strictly lower than yours, you suffer a Wrong Show penalty. You accumulate your hand score plus a flat 30-point penalty, while other players accumulate 0 points for that round."
+    },
+    {
+      "question": "How are card points calculated?",
+      "answer": "Aces represent 1 point. Number cards 2-10 represent their exact face values. Jacks, Queens, and Kings represent 10 points. Hand value is the absolute sum of all cards in your hand."
+    },
+    {
+      "question": "How does a player win the tournament?",
+      "answer": "When a player's cumulative total score across rounds exceeds 100 points, they are permanently eliminated. The last remaining player with 100 points or less wins the entire tournament."
+    }
+  ],
+  "footer": {
+    "copyright": "© 2026 Three Card Showdown. Built with Express, Socket.io, and luxury animations. All rights reserved."
+  }
+}
