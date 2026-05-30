@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three Card Points Game</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body
+    class="bg-dark text-light font-sans m-0 p-0 flex flex-col justify-between h-screen"
+  >
+    <!-- Lobby Interface Screen -->
+    <div
+      id="lobby-screen"
+      class="flex-col items-center justify-center h-full gap-2 p-2"
+    >
+      <div class="panel w-full max-w-md text-center">
+        <h1 class="text-primary m-0 mb-1">🎴 Three Card Points</h1>
+        <p class="text-muted mb-2">
+          Low score wins. Strategy and matching rule is key.
+        </p>
+
+        <form id="join-form" class="flex flex-col gap-1">
+          <div class="input-group">
+            <label for="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              placeholder="Type your username"
+              required
+              autocomplete="off"
+            />
+          </div>
+          <div class="input-group">
+            <label for="room-id">Room ID Code</label>
+            <input
+              type="text"
+              id="room-id"
+              placeholder="Enter Room Code"
+              required
+              autocomplete="off"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary w-full py-1">
+            Join Game Room
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Game Play Arena Screen -->
+    <div
+      id="game-screen"
+      class="hidden h-full flex-col p-1 relative overflow-hidden"
+    >
+      <!-- Top Bar State / Scoreboard Header -->
+      <header
+        class="flex justify-between items-center bg-panel p-1 rounded border-b gap-1"
+      >
+        <div>
+          <span class="badge badge-accent"
+            >Room: <strong id="display-room-id"></strong
+          ></span>
+          <span class="badge"
+            >Round: <strong id="display-round-num">1</strong></span
+          >
+        </div>
+        <div class="flex gap-1" id="top-scoreboard">
+          <!-- Live dynamic scores populated here -->
+        </div>
+        <div>
+          <button id="start-game-btn" class="btn btn-success hidden">
+            Start Game
+          </button>
+        </div>
+      </header>
+
+      <!-- Center Arena Field Grid -->
+      <main
+        class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-1 my-1 overflow-hidden"
+      >
+        <!-- Opponent Players Area -->
+        <section
+          id="opponents-panel"
+          class="md:col-span-3 flex flex-col justify-center gap-1 bg-table rounded p-1 relative border"
+        >
+          <!-- Rendered opponent seating layout -->
+          <div
+            id="opponents-list"
+            class="flex justify-around items-center h-full flex-wrap gap-1"
+          ></div>
+
+          <!-- Center Board Stack (Draw Deck & Discard pile side-by-side) -->
+          <div class="flex justify-center items-center gap-3 my-auto z-10">
+            <!-- Draw Pile -->
+            <div class="text-center">
+              <div
+                class="deck-stack card-back flex items-center justify-center text-bold"
+              >
+                <span id="deck-card-count">0</span>
+              </div>
+              <div class="text-small text-muted mt-0-5">Draw Deck</div>
+            </div>
+
+            <!-- Discard Pile -->
+            <div class="text-center">
+              <div
+                id="discard-pile-container"
+                class="deck-stack flex items-center justify-center bg-panel border rounded"
+              >
+                <!-- Dynamically rendered top discard card -->
+              </div>
+              <div class="text-small text-muted mt-0-5">Discard Pile</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Logs / Actions Chat Panel -->
+        <aside
+          class="md:col-span-1 bg-panel border rounded flex flex-col justify-between overflow-hidden"
+        >
+          <div class="p-1 border-b text-bold text-primary">Game Logs</div>
+          <div
+            id="log-box"
+            class="flex-1 p-1 overflow-y-auto text-small text-muted"
+          >
+            <!-- Live updates written here -->
+          </div>
+        </aside>
+      </main>
+
+      <!-- Bottom Active Player Tray Panel -->
+      <footer
+        class="bg-panel p-1 rounded border flex flex-col md:flex-row justify-between items-center gap-1 z-20"
+      >
+        <div class="flex items-center gap-1">
+          <div class="player-badge active" id="my-badge">
+            <span class="text-bold" id="my-username">You</span>
+            <span class="text-small text-accent ml-0-5" id="my-score-display"
+              >(0 Pts)</span
+            >
+          </div>
+          <div class="text-small text-muted italic" id="turn-indicator">
+            Waiting...
+          </div>
+        </div>
+
+        <!-- Selected Active Cards Tray -->
+        <div id="my-hand-container" class="flex gap-1 justify-center py-0-5">
+          <!-- Self cards will render here -->
+        </div>
+
+        <!-- Interaction Controls -->
+        <div class="flex gap-1">
+          <button id="play-btn" class="btn btn-primary" disabled>
+            Play Selected
+          </button>
+          <button id="show-btn" class="btn btn-danger" disabled>
+            Call SHOW
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Show Results Modal Screen Overlay -->
+    <div id="result-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2 id="modal-title" class="text-center m-0 text-primary">
+          Show Results
+        </h2>
+        <p id="modal-status" class="text-center text-muted mb-2"></p>
+
+        <table class="scoreboard-table w-full text-left mb-2">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Cards Left</th>
+              <th>Hand Value</th>
+              <th>Round Score Penalty</th>
+              <th>Total Game Score</th>
+            </tr>
+          </thead>
+          <tbody id="modal-table-body">
+            <!-- Populated row dynamic values -->
+          </tbody>
+        </table>
+
+        <div class="flex justify-center">
+          <button id="next-round-btn" class="btn btn-primary px-2">
+            Proceed
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Socket IO Client Script Link -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Modular JS Script Entry -->
+    <script src="js/game.js" type="module"></script>
+  </body>
+</html>

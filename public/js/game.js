@@ -1,0 +1,370 @@
+const socket = io();
+
+// Client state variables
+let myId = null;
+let currentRoom = null;
+let gameState = null;
+let selectedCards = []; // Tracks ids of hand cards selected to play
+
+// DOM elements references
+const lobbyScreen = document.getElementById("lobby-screen");
+const gameScreen = document.getElementById("game-screen");
+const joinForm = document.getElementById("join-form");
+const usernameInput = document.getElementById("username");
+const roomIdInput = document.getElementById("room-id");
+
+const displayRoomId = document.getElementById("display-room-id");
+const displayRoundNum = document.getElementById("display-round-num");
+const topScoreboard = document.getElementById("top-scoreboard");
+const startGameBtn = document.getElementById("start-game-btn");
+const opponentsList = document.getElementById("opponents-list");
+const logBox = document.getElementById("log-box");
+
+const deckCardCount = document.getElementById("deck-card-count");
+const discardPileContainer = document.getElementById("discard-pile-container");
+
+const myHandContainer = document.getElementById("my-hand-container");
+const myBadge = document.getElementById("my-badge");
+const myUsernameDisplay = document.getElementById("my-username");
+const myScoreDisplay = document.getElementById("my-score-display");
+const turnIndicator = document.getElementById("turn-indicator");
+
+const playBtn = document.getElementById("play-btn");
+const showBtn = document.getElementById("show-btn");
+
+const resultModal = document.getElementById("result-modal");
+const modalTitle = document.getElementById("modal-title");
+const modalStatus = document.getElementById("modal-status");
+const modalTableBody = document.getElementById("modal-table-body");
+const nextRoundBtn = document.getElementById("next-round-btn");
+
+// Form Submit: Join Room
+joinForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const username = usernameInput.value.trim();
+  const roomId = roomIdInput.value.trim();
+
+  if (username && roomId) {
+    socket.emit("joinRoom", { username, roomId });
+  }
+});
+
+// Action: Start Game Click
+startGameBtn.addEventListener("click", () => {
+  if (currentRoom) {
+    socket.emit("startGame", currentRoom);
+  }
+});
+
+// Action: Play Selected Cards Click
+playBtn.addEventListener("click", () => {
+  if (selectedCards.length === 0 || !currentRoom) return;
+  socket.emit("playCards", {
+    roomId: currentRoom,
+    cardIds: selectedCards,
+  });
+  selectedCards = [];
+});
+
+// Action: Call Show Click
+showBtn.addEventListener("click", () => {
+  if (
+    confirm("Are you sure you want to call SHOW? All hands will be compared.")
+  ) {
+    socket.emit("callShow", currentRoom);
+  }
+});
+
+// Action: Advance Modal/Proceed Click
+nextRoundBtn.addEventListener("click", () => {
+  resultModal.classList.add("hidden");
+  if (gameState && gameState.status === "game_over") {
+    // Reset back to lobby
+    window.location.reload();
+  } else {
+    // Round is ended, host gets option to trigger start next round
+    socket.emit("startGame", currentRoom);
+  }
+});
+
+// Listener: Connection Establish
+socket.on("connect", () => {
+  myId = socket.id;
+  console.log("Connected to server. ID:", myId);
+});
+
+// Listener: Error Messaging
+socket.on("errorMsg", (msg) => {
+  alert(msg);
+});
+
+// Listener: Central State Synced from Server
+socket.on("gameStateUpdate", (state) => {
+  gameState = state;
+  currentRoom = state.id;
+
+  // Swap lobby to active match layout
+  lobbyScreen.classList.add("hidden");
+  gameScreen.classList.remove("hidden");
+
+  // Sync Header Data
+  displayRoomId.textContent = state.id;
+  displayRoundNum.textContent = state.roundNumber;
+
+  // Manage Host controls visibility
+  // Room host is arbitrarily the first non-eliminated player
+  const hostPlayer = state.players.find((p) => !p.eliminated);
+  if (hostPlayer && hostPlayer.id === myId && state.status === "lobby") {
+    startGameBtn.classList.remove("hidden");
+  } else {
+    startGameBtn.classList.add("hidden");
+  }
+
+  // Update top scoreboard list
+  updateTopScoreboard(state.players);
+
+  // Update center field stacks
+  deckCardCount.textContent = state.deckCount;
+  renderTopDiscardCard(state.topDiscardCard);
+
+  // Parse local identity values
+  const me = state.players.find((p) => p.id === myId);
+  const myTurnIndex = state.players.findIndex((p) => p.id === myId);
+  const isMyTurn =
+    state.currentTurnIndex === myTurnIndex && state.status === "playing";
+
+  // Opponent Layout rendering
+  renderOpponents(state.players, state.currentTurnIndex, state.status);
+
+  // Sync Log box
+  updateLogs(state.logs);
+
+  // Render Client User Tray Hand
+  if (me) {
+    myUsernameDisplay.textContent = me.username;
+    myScoreDisplay.textContent = `(${me.totalScore} Pts)`;
+    if (me.eliminated) {
+      myBadge.classList.add("eliminated");
+      turnIndicator.textContent = "You have been Eliminated.";
+    } else if (isMyTurn) {
+      myBadge.classList.add("active");
+      turnIndicator.textContent = "Your Turn!";
+    } else {
+      myBadge.classList.remove("active");
+      turnIndicator.textContent = "Opponent Turn...";
+    }
+
+    renderMyHand(me.hand, isMyTurn);
+  }
+
+  // Evaluate buttons dynamic interaction rules
+  updateActionControls(isMyTurn);
+
+  // Handle Show results display
+  if (state.status === "round_end" || state.status === "game_over") {
+    renderShowResultsModal(state);
+  }
+});
+
+// Helper: Header scoreboard
+function updateTopScoreboard(players) {
+  topScoreboard.innerHTML = "";
+  players.forEach((p) => {
+    const badge = document.createElement("span");
+    badge.className = `badge ${p.eliminated ? "eliminated" : ""}`;
+    badge.innerHTML = `${p.username}: <strong>${p.totalScore}</strong>`;
+    topScoreboard.appendChild(badge);
+  });
+}
+
+// Helper: Discard pile render
+function renderTopDiscardCard(card) {
+  discardPileContainer.innerHTML = "";
+  if (!card) {
+    discardPileContainer.textContent = "Empty";
+    discardPileContainer.className =
+      "deck-stack flex items-center justify-center bg-panel border rounded text-muted";
+    return;
+  }
+
+  const cardElement = createCardDOM(card, false);
+  discardPileContainer.appendChild(cardElement);
+}
+
+// Helper: Build Single Card Element
+function createCardDOM(card, interactable = false) {
+  const cardDiv = document.createElement("div");
+
+  if (card.id === "hidden") {
+    cardDiv.className = "card card-back";
+    return cardDiv;
+  }
+
+  const isRed = ["♥", "♦"].includes(card.suit);
+  cardDiv.className = `card ${isRed ? "suit-red" : "suit-black"}`;
+  cardDiv.dataset.cardId = card.id;
+
+  cardDiv.innerHTML = `
+    <div class="card-top">
+      <span>${card.rank}</span>
+      <span>${card.suit}</span>
+    </div>
+    <div class="card-suit-big">${card.suit}</div>
+    <div class="card-bottom">
+      <span>${card.suit}</span>
+      <span>${card.rank}</span>
+    </div>
+  `;
+
+  return cardDiv;
+}
+
+// Helper: Seating and opponent hand count displays
+function renderOpponents(players, currentTurnIndex, status) {
+  opponentsList.innerHTML = "";
+  const opponents = players.filter((p) => p.id !== myId);
+
+  opponents.forEach((p) => {
+    const pIndex = players.findIndex((player) => player.id === p.id);
+    const isPlayerTurn = currentTurnIndex === pIndex && status === "playing";
+
+    const box = document.createElement("div");
+    box.className = `opponent-box ${isPlayerTurn ? "turn-active" : ""} ${p.eliminated ? "eliminated" : ""}`;
+
+    let cardsLayout = "";
+    for (let i = 0; i < p.cardCount; i++) {
+      cardsLayout += `<div class="card-back" style="width: 1.2rem; height: 1.8rem; border-radius: 2px; display: inline-block; margin-right: 2px;"></div>`;
+    }
+
+    box.innerHTML = `
+      <div class="text-bold text-small">${p.username}</div>
+      <div class="text-small text-accent font-bold">${p.totalScore} Pts</div>
+      <div class="my-1 flex justify-center">${cardsLayout || (p.eliminated ? "ELIMINATED" : "0 Cards")}</div>
+    `;
+    opponentsList.appendChild(box);
+  });
+}
+
+// Helper: Sync log scroll window
+function updateLogs(logs) {
+  logBox.innerHTML = "";
+  logs.forEach((log) => {
+    const p = document.createElement("p");
+    p.className = "m-0 mb-1";
+    p.textContent = log;
+    logBox.appendChild(p);
+  });
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+// Helper: Active user card generation and selection rules
+function renderMyHand(hand, isMyTurn) {
+  myHandContainer.innerHTML = "";
+
+  hand.forEach((card) => {
+    const cardEl = createCardDOM(card);
+
+    if (isMyTurn) {
+      // Setup toggling matching logic checks
+      cardEl.addEventListener("click", () => {
+        const cardId = card.id;
+        const index = selectedCards.indexOf(cardId);
+
+        if (index > -1) {
+          // Deselect
+          selectedCards.splice(index, 1);
+          cardEl.classList.remove("selected");
+        } else {
+          // Rule validation checks: Cards selected must have identical ranks
+          if (selectedCards.length > 0) {
+            const sampleCardId = selectedCards[0];
+            const sampleRank = hand.find((c) => c.id === sampleCardId).rank;
+            if (card.rank !== sampleRank) {
+              // Clear previous list if a completely different rank is selected
+              selectedCards.forEach((id) => {
+                const el = myHandContainer.querySelector(
+                  `[data-card-id="${id}"]`,
+                );
+                if (el) el.classList.remove("selected");
+              });
+              selectedCards = [];
+            }
+          }
+
+          selectedCards.push(cardId);
+          cardEl.classList.add("selected");
+        }
+        updateActionControls(isMyTurn);
+      });
+    }
+
+    myHandContainer.appendChild(cardEl);
+  });
+}
+
+// Helper: Action Controls disabled/enabled handling
+function updateActionControls(isMyTurn) {
+  if (isMyTurn) {
+    playBtn.disabled = selectedCards.length === 0;
+    showBtn.disabled = false;
+  } else {
+    playBtn.disabled = true;
+    showBtn.disabled = true;
+    selectedCards = [];
+  }
+}
+
+// Helper: Show results calculation layout
+function renderShowResultsModal(state) {
+  const results = state.showResults;
+  if (!results) return;
+
+  modalTableBody.innerHTML = "";
+  modalTitle.textContent =
+    state.status === "game_over"
+      ? "🏆 Tournament Game Over!"
+      : "📢 Show Results";
+
+  if (results.isValid) {
+    modalStatus.innerHTML = `✅ <strong>${results.callerUsername}</strong> called a valid show! They had the lowest score.`;
+    modalStatus.className = "text-center text-primary mb-2";
+  } else {
+    modalStatus.innerHTML = `❌ <strong>${results.callerUsername}</strong> called a WRONG SHOW! (+30 Pts Penalty Applied)`;
+    modalStatus.className = "text-center text-danger mb-2";
+  }
+
+  // Populate dynamic rows values
+  results.scores.forEach((s) => {
+    const pOrig = state.players.find((p) => p.id === s.id);
+    const row = document.createElement("tr");
+
+    let handHTML = s.hand.map((c) => `${c.rank}${c.suit}`).join(", ");
+
+    row.innerHTML = `
+      <td><strong>${s.username}</strong> ${s.id === results.callerId ? "<span>(Caller)</span>" : ""}</td>
+      <td><span class="text-small text-muted">${handHTML}</span></td>
+      <td>${s.handScore}</td>
+      <td class="text-accent">+${results.penalties[s.id] || 0}</td>
+      <td><strong>${pOrig.totalScore} / 100</strong> ${pOrig.eliminated ? "💀" : ""}</td>
+    `;
+    modalTableBody.appendChild(row);
+  });
+
+  // Adjust Next Button text depending on host/tournament state
+  const hostPlayer = state.players.find((p) => !p.eliminated);
+  if (state.status === "game_over") {
+    nextRoundBtn.textContent = "Return to Lobby";
+    nextRoundBtn.className = "btn btn-danger px-2";
+    nextRoundBtn.disabled = false;
+  } else {
+    if (hostPlayer && hostPlayer.id === myId) {
+      nextRoundBtn.textContent = "Start Next Round";
+      nextRoundBtn.disabled = false;
+    } else {
+      nextRoundBtn.textContent = "Waiting for Host...";
+      nextRoundBtn.disabled = true;
+    }
+  }
+
+  resultModal.classList.remove("hidden");
+}
