@@ -67,8 +67,8 @@ nextRoundBtn.addEventListener("click", () => {
     // Redirection back to Landing Page lobby on game over
     window.location.href = "/";
   } else {
-    // Round is ended, host gets option to trigger start next round
-    socket.emit("startGame", currentRoom);
+    // Round is ended — host triggers next round via dedicated event
+    socket.emit("nextRound", currentRoom);
   }
 });
 
@@ -93,8 +93,10 @@ socket.on("connect", () => {
 // Listener: Error Messaging
 socket.on("errorMsg", (msg) => {
   alert(msg);
-  // Redirect on critical error (like game already started)
-  window.location.href = "/";
+  // Only redirect for critical errors (game already started)
+  if (msg.includes("already started")) {
+    window.location.href = "/";
+  }
 });
 
 // Listener: Central State Synced from Server
@@ -155,6 +157,13 @@ socket.on("gameStateUpdate", (state) => {
 
   // Evaluate buttons dynamic interaction rules
   updateActionControls(isMyTurn);
+
+  // Close result modal when a new round starts (covers non-host players
+  // whose modal was never dismissed by a button click)
+  if (state.status === "playing") {
+    resultModal.classList.add("hidden");
+    selectedCards = []; // Also reset any lingering card selections
+  }
 
   // Handle Show results display
   if (state.status === "round_end" || state.status === "game_over") {
@@ -327,17 +336,23 @@ function renderShowResultsModal(state) {
 
   // Populate dynamic rows values
   results.scores.forEach((s) => {
+    // Guard: player may have disconnected between show and render
     const pOrig = state.players.find((p) => p.id === s.id);
-    const row = document.createElement("tr");
+    if (!pOrig) return;
 
-    let handHTML = s.hand.map((c) => `${c.rank}${c.suit}`).join(", ");
+    const row = document.createElement("tr");
+    const penalty = results.penalties[s.id] || 0;
+    const totalScore = pOrig.totalScore;
+    const isEliminated = pOrig.eliminated;
+
+    let handHTML = (s.hand || []).map((c) => `${c.rank}${c.suit}`).join(", ") || "—";
 
     row.innerHTML = `
-      <td><strong>${s.username}</strong> ${s.id === results.callerId ? "<span>(Caller)</span>" : ""}</td>
+      <td><strong>${s.username}</strong> ${s.id === results.callerId ? "<span class='text-accent'>(Caller)</span>" : ""}</td>
       <td><span class="text-small text-muted">${handHTML}</span></td>
       <td>${s.handScore}</td>
-      <td class="text-accent">+${results.penalties[s.id] || 0}</td>
-      <td><strong>${pOrig.totalScore} / 100</strong> ${pOrig.eliminated ? "💀" : ""}</td>
+      <td class="text-accent">+${penalty}</td>
+      <td><strong>${totalScore} / 100</strong> ${isEliminated ? "💀" : ""}</td>
     `;
     modalTableBody.appendChild(row);
   });
