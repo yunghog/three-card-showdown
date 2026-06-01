@@ -112,7 +112,7 @@ io.on("connection", (socket) => {
     updateRoomState(roomId);
   });
 
-  // Start Game
+  // Start Game (first round only, from lobby)
   socket.on("startGame", (roomId) => {
     const room = rooms[roomId];
     if (!room || room.status !== "lobby") return;
@@ -124,11 +124,26 @@ io.on("connection", (socket) => {
     room.status = "playing";
     room.roundNumber = 1;
 
-    // Reset all scores
+    // Reset all scores for new tournament
     room.players.forEach((p) => {
       p.totalScore = 0;
       p.eliminated = false;
     });
+
+    startNewRound(room);
+  });
+
+  // Next Round (from round_end, host triggers next round of same tournament)
+  socket.on("nextRound", (roomId) => {
+    const room = rooms[roomId];
+    if (!room || room.status !== "round_end") return;
+
+    // Only the first non-eliminated player (host) can advance
+    const host = room.players.find((p) => !p.eliminated);
+    if (!host || host.id !== socket.id) {
+      socket.emit("errorMsg", "Only the host can start the next round.");
+      return;
+    }
 
     startNewRound(room);
   });
@@ -260,6 +275,7 @@ function startNewRound(room) {
   room.discardPile = [];
   room.lastPlayRank = null;
   room.status = "playing";
+  room.showResults = null; // Clear previous round results
 
   // Identify non-eliminated players
   const activePlayers = room.players.filter((p) => !p.eliminated);
@@ -334,12 +350,13 @@ function logToRoom(room, message) {
 function evaluateShow(room, caller) {
   const activePlayers = room.players.filter((p) => p.activeInRound);
 
-  // Hand score mappings
+  // Hand score mappings — snapshot the hand array so it isn't affected by
+  // startNewRound() replacing p.hand references later
   const scores = activePlayers.map((p) => ({
     id: p.id,
     username: p.username,
     handScore: calculateHandScore(p.hand),
-    hand: p.hand,
+    hand: [...p.hand], // Snapshot, not a live reference
   }));
 
   // Find lowest score
