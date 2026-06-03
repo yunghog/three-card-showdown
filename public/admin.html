@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Three Card Showdown | Admin Dashboard</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+
+  <body class="bg-dark text-light">
+    <!-- LOGIN SCREEN -->
+    <div id="admin-login-screen" class="modal-overlay">
+      <div class="lobby-modal-content glass-panel" style="max-width: 500px">
+        <div class="text-center">
+          <h1 class="text-gold-gradient m-0 mb-1">🎴 Admin Dashboard</h1>
+
+          <p class="text-muted mb-2">Server Administrator Access</p>
+
+          <form id="admin-login-form" class="flex flex-col gap-1">
+            <div class="input-group">
+              <label>Username</label>
+
+              <input id="admin-username" type="text" required />
+            </div>
+
+            <div class="input-group">
+              <label>Password</label>
+
+              <input id="admin-password" type="password" required />
+            </div>
+
+            <button class="btn btn-primary btn-gold" type="submit">
+              Login
+            </button>
+          </form>
+
+          <p id="admin-login-error" class="text-danger mt-1"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="admin-dashboard" class="hidden">
+      <!-- HEADER -->
+      <header class="sticky-header">
+        <div class="header-container">
+          <div class="logo">
+            <span class="logo-emoji">🎴</span>
+
+            <span class="logo-text">
+              Three Card
+              <span class="text-gold"> Admin </span>
+            </span>
+          </div>
+
+          <div class="flex gap-1">
+            <span class="badge badge-accent">
+              Server:
+              <strong id="server-status"> ONLINE </strong>
+            </span>
+
+            <span class="badge">
+              Rooms:
+              <strong id="total-rooms"> 0 </strong>
+            </span>
+
+            <span class="badge">
+              Players:
+              <strong id="total-players"> 0 </strong>
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <div
+        class="admin-layout"
+        style="display: flex; height: 100vh; padding-top: 80px"
+      >
+        <!-- SIDEBAR -->
+        <aside
+          class="glass-panel"
+          style="width: 260px; margin: 1rem; padding: 1rem; flex-shrink: 0"
+        >
+          <h3 class="text-gold">Monitoring</h3>
+
+          <div class="flex flex-col gap-1">
+            <button class="btn btn-secondary admin-nav-btn">Dashboard</button>
+
+            <button class="btn btn-secondary admin-nav-btn">
+              Active Rooms
+            </button>
+
+            <button class="btn btn-secondary admin-nav-btn">Players</button>
+
+            <button class="btn btn-secondary admin-nav-btn">
+              Game Monitor
+            </button>
+
+            <button class="btn btn-secondary admin-nav-btn">Logs</button>
+          </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main style="flex: 1; overflow: auto; padding: 1rem">
+          <!-- METRICS -->
+          <section
+            class="grid"
+            style="
+              grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+              gap: 1rem;
+              margin-bottom: 1rem;
+            "
+          >
+            <div class="glass-panel p-2">
+              <div class="text-muted">Active Rooms</div>
+
+              <h1 id="metric-rooms" class="text-gold">0</h1>
+            </div>
+
+            <div class="glass-panel p-2">
+              <div class="text-muted">Connected Players</div>
+
+              <h1 id="metric-players" class="text-gold">0</h1>
+            </div>
+
+            <div class="glass-panel p-2">
+              <div class="text-muted">Playing Rooms</div>
+
+              <h1 id="metric-playing" class="text-gold">0</h1>
+            </div>
+
+            <div class="glass-panel p-2">
+              <div class="text-muted">Lobby Rooms</div>
+
+              <h1 id="metric-lobby" class="text-gold">0</h1>
+            </div>
+          </section>
+
+          <!-- ACTIVE ROOMS -->
+          <section class="glass-panel p-2 mb-2">
+            <h2 class="text-gold">Active Rooms</h2>
+
+            <table class="scoreboard-table w-full">
+              <thead>
+                <tr>
+                  <th>Room</th>
+                  <th>Status</th>
+                  <th>Round</th>
+                  <th>Turn</th>
+                  <th>Players</th>
+                  <th>Deck</th>
+                  <th>Last Rank</th>
+                </tr>
+              </thead>
+
+              <tbody id="rooms-table-body"></tbody>
+            </table>
+          </section>
+
+          <!-- ROOM DETAILS -->
+          <section class="glass-panel p-2 mb-2">
+            <h2 class="text-gold">Room Details</h2>
+
+            <div id="selected-room-info" class="text-muted">
+              Select a room...
+            </div>
+          </section>
+
+          <!-- PLAYER MONITOR -->
+          <section class="glass-panel p-2 mb-2">
+            <h2 class="text-gold">Player Monitoring</h2>
+
+            <table class="scoreboard-table w-full">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Socket</th>
+                  <th>Hand Score</th>
+                  <th>Total Score</th>
+                  <th>Turn</th>
+                  <th>Status</th>
+                  <th>Cards</th>
+                </tr>
+              </thead>
+
+              <tbody id="players-table-body"></tbody>
+            </table>
+          </section>
+
+          <!-- LEADERBOARD -->
+          <section class="glass-panel p-2">
+            <h2 class="text-gold">Live Points Table</h2>
+
+            <table class="scoreboard-table w-full">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Username</th>
+                  <th>Hand Score</th>
+                  <th>Tournament Score</th>
+                  <th>Eliminated</th>
+                </tr>
+              </thead>
+
+              <tbody id="leaderboard-body"></tbody>
+            </table>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <!-- SOCKET IO -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- ADMIN CLIENT -->
+    <script src="js/admin.js" type="module"></script>
+  </body>
+</html>
