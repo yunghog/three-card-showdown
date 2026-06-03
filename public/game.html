@@ -6,7 +6,10 @@
     <title>Three Card Showdown | Arena Board</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
-  <body class="bg-dark text-light m-0 p-0 flex flex-col justify-between h-screen overflow-hidden">
+
+  <body
+    class="bg-dark text-light m-0 p-0 flex flex-col justify-between h-screen overflow-hidden"
+  >
     <!-- Game Play Arena Screen (Authoritative State View) -->
     <div
       id="game-screen"
@@ -35,9 +38,7 @@
       </header>
 
       <!-- Center Arena Field Grid -->
-      <main
-        class="flex-1 flex flex-col gap-1 my-1 overflow-hidden"
-      >
+      <main class="flex-1 flex flex-col gap-1 my-1 overflow-hidden">
         <!-- Opponent Players Area -->
         <section
           id="opponents-panel"
@@ -79,14 +80,17 @@
           id="logs-panel"
           class="collapsible-logs collapsed border rounded flex flex-col overflow-hidden"
         >
-          <button id="toggle-logs-btn" class="toggle-logs-bar" type="button">
-            <span class="text-bold"><span class="logo-emoji">📋</span> Battle Logs</span>
+          <button
+            id="toggle-logs-btn"
+            class="bg-panel p-1 rounded text-light"
+            type="button"
+          >
+            <span class="text-bold"
+              ><span class="logo-emoji">📋</span> Battle Logs</span
+            >
             <span id="logs-toggle-icon" class="text-bold">▲</span>
           </button>
-          <div
-            id="log-box"
-            class="p-1 overflow-y-auto text-small text-muted"
-          >
+          <div id="log-box" class="p-1 overflow-y-auto text-small text-muted">
             <!-- Live updates written here -->
           </div>
         </aside>
