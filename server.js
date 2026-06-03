@@ -10,6 +10,18 @@ const io = new Server(server, {
 });
 
 app.use(express.static(path.join(__dirname, "public")));
+// ===============================
+// ADMIN CONFIGURATION
+// ===============================
+
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "threecardadmin";
+
+const adminSockets = new Set();
+
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
 
 // Game State Storage
 const rooms = {};
@@ -66,9 +78,163 @@ function calculateHandScore(hand) {
   return hand.reduce((sum, card) => sum + card.score, 0);
 }
 
+// ===============================
+// ADMIN HELPERS
+// ===============================
+
+function getCurrentTurnPlayer(room) {
+  return room.players[room.currentTurnIndex]
+    ? room.players[room.currentTurnIndex].username
+    : "N/A";
+}
+
+function buildAdminDashboardData() {
+  const roomList = Object.values(rooms);
+
+  return {
+    serverStatus: "ONLINE",
+
+    totalRooms: roomList.length,
+
+    totalPlayers: roomList.reduce(
+      (total, room) => total + room.players.length,
+      0,
+    ),
+
+    rooms: roomList.map((room) => ({
+      roomId: room.id,
+
+      status: room.status,
+
+      roundNumber: room.roundNumber,
+
+      currentTurnPlayer: getCurrentTurnPlayer(room),
+
+      connectedPlayers: room.players.length,
+
+      eliminatedPlayers: room.players.filter((p) => p.eliminated).length,
+
+      deckCount: room.deck.length,
+
+      lastPlayRank: room.lastPlayRank || "-",
+    })),
+  };
+}
+
+function buildAdminRoomState(room) {
+  return {
+    roomId: room.id,
+
+    status: room.status,
+
+    roundNumber: room.roundNumber,
+
+    currentTurnPlayer: getCurrentTurnPlayer(room),
+
+    currentTurnIndex: room.currentTurnIndex,
+
+    deckCount: room.deck.length,
+
+    lastPlayRank: room.lastPlayRank,
+
+    topDiscardCard: room.discardPile[room.discardPile.length - 1] || null,
+
+    discardPile: room.discardPile,
+
+    logs: room.logs,
+
+    players: room.players.map((player) => ({
+      socketId: player.id,
+
+      username: player.username,
+
+      totalScore: player.totalScore,
+
+      handScore: calculateHandScore(player.hand),
+
+      activeInRound: player.activeInRound,
+
+      eliminated: player.eliminated,
+
+      isCurrentTurn: room.players[room.currentTurnIndex]?.id === player.id,
+
+      hand: player.hand,
+    })),
+  };
+}
+
+function broadcastAdminDashboard() {
+  const payload = buildAdminDashboardData();
+
+  adminSockets.forEach((socketId) => {
+    io.to(socketId).emit("adminDashboardUpdate", payload);
+  });
+}
+
+function broadcastAdminRoomUpdates() {
+  adminSockets.forEach((socketId) => {
+    const dashboardPayload = buildAdminDashboardData();
+
+    io.to(socketId).emit("adminDashboardUpdate", dashboardPayload);
+
+    Object.values(rooms).forEach((room) => {
+      io.to(socketId).emit("adminRoomStateUpdate", buildAdminRoomState(room));
+    });
+  });
+}
+
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
+  // =====================================
+  // ADMIN LOGIN
+  // =====================================
 
+  socket.on("adminLogin", ({ username, password }) => {
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      adminSockets.add(socket.id);
+
+      socket.emit("adminLoginSuccess", {
+        success: true,
+      });
+
+      socket.emit("adminDashboardUpdate", buildAdminDashboardData());
+
+      Object.values(rooms).forEach((room) => {
+        socket.emit("adminRoomStateUpdate", buildAdminRoomState(room));
+      });
+
+      console.log(`Admin authenticated: ${socket.id}`);
+    } else {
+      socket.emit("adminLoginFailed", {
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+  });
+
+  // =====================================
+  // ADMIN DASHBOARD REQUEST
+  // =====================================
+
+  socket.on("adminDashboardRequest", () => {
+    if (!adminSockets.has(socket.id)) return;
+
+    socket.emit("adminDashboardUpdate", buildAdminDashboardData());
+  });
+
+  // =====================================
+  // ROOM DETAILS REQUEST
+  // =====================================
+
+  socket.on("adminRoomStateRequest", (roomId) => {
+    if (!adminSockets.has(socket.id)) return;
+
+    const room = rooms[roomId];
+
+    if (!room) return;
+
+    socket.emit("adminRoomStateUpdate", buildAdminRoomState(room));
+  });
   // Create or Join Room
   socket.on("joinRoom", ({ username, roomId }) => {
     if (!username || !roomId) return;
@@ -110,6 +276,7 @@ io.on("connection", (socket) => {
 
     logToRoom(room, `${username} joined the room.`);
     updateRoomState(roomId);
+    broadcastAdminRoomUpdates();
   });
 
   // Start Game (first round only, from lobby)
@@ -131,6 +298,7 @@ io.on("connection", (socket) => {
     });
 
     startNewRound(room);
+    broadcastAdminRoomUpdates();
   });
 
   // Next Round (from round_end, host triggers next round of same tournament)
@@ -146,6 +314,7 @@ io.on("connection", (socket) => {
     }
 
     startNewRound(room);
+    broadcastAdminRoomUpdates();
   });
 
   // Play Cards Turn Action
@@ -190,6 +359,11 @@ io.on("connection", (socket) => {
 
     // Push played cards to discard pile
     room.discardPile.push(...cardsToPlay);
+    io.to(roomId).emit("cardDiscarded", {
+      player: player.username,
+      cardCount: cardsToPlay.length,
+      rank: firstRank,
+    });
 
     let drewCard = null;
     if (isMatch) {
@@ -219,6 +393,7 @@ io.on("connection", (socket) => {
     // Turn is complete. Advance turn to next active player.
     advanceTurn(room);
     updateRoomState(roomId);
+    broadcastAdminRoomUpdates();
   });
 
   // Call SHOW Action
@@ -233,11 +408,17 @@ io.on("connection", (socket) => {
     }
 
     evaluateShow(room, caller);
+    broadcastAdminRoomUpdates();
   });
 
   // Disconnect Handling
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
+    if (adminSockets.has(socket.id)) {
+      adminSockets.delete(socket.id);
+
+      console.log(`Admin disconnected: ${socket.id}`);
+    }
     for (const roomId in rooms) {
       const room = rooms[roomId];
       const playerIndex = room.players.findIndex((p) => p.id === socket.id);
@@ -262,6 +443,7 @@ io.on("connection", (socket) => {
             }
           }
           updateRoomState(roomId);
+          broadcastAdminRoomUpdates();
         }
         break;
       }
@@ -284,6 +466,7 @@ function startNewRound(room) {
     room.status = "game_over";
     logToRoom(room, "Game over! Not enough players left.");
     updateRoomState(room.id);
+    broadcastAdminRoomUpdates();
     return;
   }
 
@@ -312,6 +495,7 @@ function startNewRound(room) {
     `Starter discard card is ${starterCard.rank}${starterCard.suit}.`,
   );
   updateRoomState(room.id);
+  broadcastAdminRoomUpdates();
 }
 
 // Reshuffle discard pile back to deck if empty
@@ -431,6 +615,7 @@ function evaluateShow(room, caller) {
 
   room.showResults = showResults;
   updateRoomState(room.id);
+  broadcastAdminRoomUpdates();
 }
 
 // Sync room updates to clients (with information hiding)
