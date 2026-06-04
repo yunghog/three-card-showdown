@@ -16,7 +16,7 @@
   --text-muted: #94a3b8;
   --border-color: rgba(212, 175, 55, 0.15); /* Gold-tinted border */
   --card-red: #f43f5e;
-  --card-black: #cbd5e1;
+  --card-black: #202934;
   --gold-gradient: linear-gradient(
     135deg,
     #bf953f 0%,
@@ -736,7 +736,10 @@ body {
 .floating-card-3d .card {
   cursor: default;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+  width: 4.5rem;
+  height: 6.5rem;
 }
+
 .card-ace {
   top: 15%;
   left: 20%;
@@ -1299,5 +1302,258 @@ body {
   .card {
     width: 4.5rem;
     height: 6.5rem;
+  }
+}
+/* ==========================================================
+   ADMIN DASHBOARD
+   ========================================================== */
+
+.admin-layout {
+  min-height: 100vh;
+}
+
+/* Sidebar */
+
+.admin-nav-btn {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.admin-nav-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Dashboard Tables */
+
+#rooms-table-body tr,
+#players-table-body tr,
+#leaderboard-body tr {
+  transition: all 0.2s ease;
+}
+
+#rooms-table-body tr:hover,
+#players-table-body tr:hover,
+#leaderboard-body tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+#rooms-table-body td,
+#players-table-body td,
+#leaderboard-body td {
+  vertical-align: middle;
+}
+
+/* Metrics Cards */
+
+.metric-card {
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.metric-card h1 {
+  margin: 0.5rem 0 0;
+  font-size: 2rem;
+}
+
+/* Room Details */
+
+#selected-room-info {
+  color: var(--text-light);
+}
+
+#selected-room-info h3 {
+  margin-top: 0;
+}
+
+#selected-room-info p {
+  margin: 0.4rem 0;
+}
+
+/* Scroll Containers */
+
+.admin-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.admin-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.admin-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+/* Status Indicators */
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-indicator::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-online::before {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.status-offline::before {
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+/* Room Status Badges */
+
+.badge-playing {
+  background: #10b981;
+  color: white;
+}
+
+.badge-lobby {
+  background: #3b82f6;
+  color: white;
+}
+
+.badge-round-end {
+  background: #f59e0b;
+  color: white;
+}
+
+.badge-game-over {
+  background: #ef4444;
+  color: white;
+}
+
+/* Turn Indicator */
+
+.turn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Leaderboard Styling */
+
+#leaderboard-body tr:nth-child(1) {
+  background: rgba(212, 175, 55, 0.08);
+}
+
+#leaderboard-body tr:nth-child(2) {
+  background: rgba(192, 192, 192, 0.05);
+}
+
+#leaderboard-body tr:nth-child(3) {
+  background: rgba(205, 127, 50, 0.05);
+}
+
+/* Room Selection Highlight */
+
+.room-selected {
+  background: rgba(212, 175, 55, 0.15) !important;
+  border-left: 4px solid var(--primary);
+}
+
+/* Admin Login */
+
+#admin-login-screen .glass-panel {
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+#admin-login-screen input {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Dashboard Panels */
+
+.admin-panel {
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+
+/* Logs */
+
+.admin-log-entry {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+/* Cards Display */
+
+.admin-card-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.admin-card-chip {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-card-red {
+  color: #f87171;
+}
+
+.admin-card-black {
+  color: #e2e8f0;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .admin-layout aside {
+    width: auto !important;
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    padding-top: 70px;
+  }
+
+  .scoreboard-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  #selected-room-info {
+    font-size: 0.9rem;
+  }
+
+  .metric-card h1 {
+    font-size: 1.5rem;
   }
 }

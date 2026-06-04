@@ -5,6 +5,17 @@ let myId = null;
 let currentRoom = null;
 let gameState = null;
 let selectedCards = []; // Tracks ids of hand cards selected to play
+let previousGameStatus = null;
+let previousLogCount = 0;
+let previousIsMyTurn = false;
+// Turn notification sound
+const roundStartSound = new Audio("../assets/sounds/shuffle.mp3");
+const yourTurnSound = new Audio("../assets/sounds/ding.mp3");
+const discardSound = new Audio("../assets/sounds/draw-card.mp3");
+
+roundStartSound.volume = 0.7;
+yourTurnSound.volume = 0.8;
+discardSound.volume = 0.5;
 
 // DOM elements references (Strictly Gameplay Arena Nodes)
 const gameScreen = document.getElementById("game-screen");
@@ -101,6 +112,13 @@ socket.on("errorMsg", (msg) => {
 
 // Listener: Central State Synced from Server
 socket.on("gameStateUpdate", (state) => {
+  if (state.status === "playing" && previousGameStatus !== "playing") {
+    roundStartSound.currentTime = 0;
+
+    roundStartSound.play().catch(() => {});
+  }
+
+  previousGameStatus = state.status;
   gameState = state;
   currentRoom = state.id;
 
@@ -129,7 +147,17 @@ socket.on("gameStateUpdate", (state) => {
   const myTurnIndex = state.players.findIndex((p) => p.id === myId);
   const isMyTurn =
     state.currentTurnIndex === myTurnIndex && state.status === "playing";
+  if (isMyTurn && !previousIsMyTurn) {
+    yourTurnSound.currentTime = 0;
 
+    yourTurnSound.play().catch(() => {});
+
+    if (navigator.vibrate) {
+      navigator.vibrate(200);
+    }
+  }
+
+  previousIsMyTurn = isMyTurn;
   // Opponent Layout rendering
   renderOpponents(state.players, state.currentTurnIndex, state.status);
 
@@ -169,6 +197,12 @@ socket.on("gameStateUpdate", (state) => {
   if (state.status === "round_end" || state.status === "game_over") {
     renderShowResultsModal(state);
   }
+});
+socket.on("cardDiscarded", (data) => {
+  discardSound.currentTime = 0;
+  discardSound.play().catch(() => {});
+
+  console.log(`${data.player} discarded ${data.cardCount} card(s)`);
 });
 
 // Helper: Header scoreboard
@@ -284,7 +318,7 @@ function renderMyHand(hand, isMyTurn) {
             if (card.rank !== sampleRank) {
               selectedCards.forEach((id) => {
                 const el = myHandContainer.querySelector(
-                  `[data-card-id="${id}"]`
+                  `[data-card-id="${id}"]`,
                 );
                 if (el) el.classList.remove("selected");
               });
@@ -345,7 +379,8 @@ function renderShowResultsModal(state) {
     const totalScore = pOrig.totalScore;
     const isEliminated = pOrig.eliminated;
 
-    let handHTML = (s.hand || []).map((c) => `${c.rank}${c.suit}`).join(", ") || "—";
+    let handHTML =
+      (s.hand || []).map((c) => `${c.rank}${c.suit}`).join(", ") || "—";
 
     row.innerHTML = `
       <td><strong>${s.username}</strong> ${s.id === results.callerId ? "<span class='text-accent'>(Caller)</span>" : ""}</td>
@@ -400,4 +435,3 @@ if (toggleLogsBtn && logsPanel && logsToggleIcon) {
     }
   });
 }
-
