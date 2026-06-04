@@ -6,6 +6,7 @@ let currentRoom = null;
 let gameState = null;
 let selectedCards = []; // Tracks ids of hand cards selected to play
 let previousGameStatus = null;
+let firstStateReceived = false;
 let previousLogCount = 0;
 let previousIsMyTurn = false;
 // Turn notification sound
@@ -46,6 +47,23 @@ const modalStatus = document.getElementById("modal-status");
 const modalTableBody = document.getElementById("modal-table-body");
 const nextRoundBtn = document.getElementById("next-round-btn");
 
+const announcementContainer = document.getElementById("announcement-container");
+
+const announcementTitle = document.getElementById("announcement-title");
+
+const announcementMessage = document.getElementById("announcement-message");
+
+let announcementTimeout;
+let previousRoundNumber = null;
+function showAnnouncement(title, message, duration = 3000) {
+  clearTimeout(announcementTimeout);
+  announcementTitle.textContent = title;
+  announcementMessage.textContent = message;
+  announcementContainer.classList.remove("hidden");
+  announcementTimeout = setTimeout(() => {
+    announcementContainer.classList.add("hidden");
+  }, duration);
+}
 // Action: Start Game Click
 startGameBtn.addEventListener("click", () => {
   if (currentRoom) {
@@ -115,10 +133,22 @@ socket.on("errorMsg", (msg) => {
 socket.on("gameStateUpdate", (state) => {
   if (state.status === "playing" && previousGameStatus !== "playing") {
     roundStartSound.currentTime = 0;
-
     roundStartSound.play().catch(() => {});
   }
+  if (
+    firstStateReceived &&
+    state.status === "playing" &&
+    previousGameStatus !== "playing"
+  ) {
+    showAnnouncement(
+      `ROUND ${state.roundNumber} STARTED!`,
+      "Cards have been dealt. Good luck!",
+      1500,
+    );
+  }
+  firstStateReceived = true;
 
+  previousRoundNumber = state.roundNumber;
   previousGameStatus = state.status;
   gameState = state;
   currentRoom = state.id;

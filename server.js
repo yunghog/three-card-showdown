@@ -600,12 +600,14 @@ function evaluateShow(room, caller) {
     );
 
     room.players.forEach((p) => {
+      const hscore = showResults.scores.find((s) => s.id === p.id).handScore;
       if (p.activeInRound) {
         if (p.id === caller.id) {
           p.totalScore += penaltyPoints;
           showResults.penalties[p.id] = penaltyPoints;
         } else {
-          showResults.penalties[p.id] = 0; // Other players safe
+          p.totalScore += hscore;
+          showResults.penalties[p.id] = hscore;
         }
       }
     });
