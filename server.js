@@ -411,6 +411,25 @@ io.on("connection", (socket) => {
     broadcastAdminRoomUpdates();
   });
 
+  socket.on("createRoom", ({ username }, callback) => {
+    const roomId = generateRoomId();
+
+    rooms[roomId] = {
+      id: roomId,
+      players: [],
+      status: "lobby",
+      deck: [],
+      discardPile: [],
+      lastPlayRank: null,
+      currentTurnIndex: 0,
+      logs: [],
+      roundNumber: 1,
+    };
+
+    callback({
+      roomId,
+    });
+  });
   // Disconnect Handling
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
@@ -450,7 +469,9 @@ io.on("connection", (socket) => {
     }
   });
 });
-
+function generateRoomId() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 // Start a fresh round of cards
 function startNewRound(room) {
   room.deck = shuffle(createDeck());
@@ -566,8 +587,9 @@ function evaluateShow(room, caller) {
     );
     scores.forEach((s) => {
       const p = room.players.find((player) => player.id === s.id);
-      p.totalScore += s.handScore;
-      showResults.penalties[s.id] = s.handScore;
+      p.totalScore += s.id === showResults.callerId ? 0 : s.handScore;
+      showResults.penalties[s.id] =
+        s.id === showResults.callerId ? 0 : s.handScore;
     });
   } else {
     // Wrong Show -> Caller gets flat 30 points penalty + their cards, others get 0 points.
@@ -668,9 +690,18 @@ function updateRoomState(roomId) {
     io.to(player.id).emit("gameStateUpdate", cleanRoomState);
   });
 }
-
+app.get("/api/rooms", (req, res) => {
+  const availableRooms = Object.values(rooms)
+    .filter((room) => room.status === "lobby")
+    .map((room) => ({
+      roomId: room.id,
+      players: room.players.length,
+      host: room.players[0].username,
+    }));
+  res.json(availableRooms);
+});
 // Start Server Listen
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server executing live on http://localhost:${PORT}`);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server executing live on ${PORT}`);
 });

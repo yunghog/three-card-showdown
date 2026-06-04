@@ -31,6 +31,7 @@ const deckCardCount = document.getElementById("deck-card-count");
 const discardPileContainer = document.getElementById("discard-pile-container");
 
 const myHandContainer = document.getElementById("my-hand-container");
+const myHand = document.getElementById("my-hand");
 const myBadge = document.getElementById("my-badge");
 const myUsernameDisplay = document.getElementById("my-username");
 const myScoreDisplay = document.getElementById("my-score-display");
@@ -299,11 +300,14 @@ function updateLogs(logs) {
 // Helper: Active user card generation and selection rules
 function renderMyHand(hand, isMyTurn) {
   myHandContainer.innerHTML = "";
-
+  isMyTurn
+    ? myHand.classList.add("glow-hand")
+    : myHand.classList.remove("glow-hand");
   hand.forEach((card) => {
     const cardEl = createCardDOM(card);
-
     if (isMyTurn) {
+      cardEl.classList.add("glow-hand");
+
       cardEl.addEventListener("click", () => {
         const cardId = card.id;
         const index = selectedCards.indexOf(cardId);

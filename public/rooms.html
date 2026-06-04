@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Three Card Showdown Rooms</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+
+  <body class="bg-dark text-light">
+    <div class="max-w-md m-auto p-2">
+      <h1 class="text-center text-gold-gradient">🎴 Game Rooms</h1>
+
+      <div class="glass-panel p-2 mb-2">
+        <div class="input-group">
+          <label> Username </label>
+
+          <input id="username" type="text" />
+        </div>
+
+        <button id="create-room-btn" class="btn btn-primary btn-gold w-full">
+          Create New Room
+        </button>
+      </div>
+
+      <div class="glass-panel p-2">
+        <h3>Available Rooms</h3>
+
+        <div id="rooms-list"></div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="js/rooms.js"></script>
+  </body>
+</html>

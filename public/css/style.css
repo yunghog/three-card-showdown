@@ -460,6 +460,10 @@ body {
   color: var(--text-muted);
 }
 
+.glow-hand {
+  border: 2px solid var(--primary);
+}
+
 @media (max-width: 768px) {
   .grid-cols-1 {
     grid-template-columns: 1fr;
