@@ -203,12 +203,20 @@ socket.on("gameStateUpdate", (state) => {
     if (me.eliminated) {
       myBadge.className = "player-badge eliminated";
       turnIndicator.textContent = "You have been Eliminated.";
-    } else if (isMyTurn) {
-      myBadge.className = "player-badge active";
-      turnIndicator.textContent = "Your Turn!";
+      myHand.classList.remove("waiting-player");
+    } else if (!me.activeInRound && state.status !== "lobby") {
+      myBadge.className = "player-badge waiting";
+      turnIndicator.textContent = "Waiting for next round...";
+      myHand.classList.add("waiting-player");
     } else {
-      myBadge.className = "player-badge";
-      turnIndicator.textContent = "Opponent Turn...";
+      myHand.classList.remove("waiting-player");
+      if (isMyTurn) {
+        myBadge.className = "player-badge active";
+        turnIndicator.textContent = "Your Turn!";
+      } else {
+        myBadge.className = "player-badge";
+        turnIndicator.textContent = "Opponent Turn...";
+      }
     }
 
     renderMyHand(me.hand, isMyTurn);
@@ -297,13 +305,18 @@ function renderOpponents(players, currentTurnIndex, status) {
   opponents.forEach((p) => {
     const pIndex = players.findIndex((player) => player.id === p.id);
     const isPlayerTurn = currentTurnIndex === pIndex && status === "playing";
+    const isWaiting = !p.activeInRound && status !== "lobby" && !p.eliminated;
 
     const box = document.createElement("div");
-    box.className = `opponent-box ${isPlayerTurn ? "turn-active" : ""} ${p.eliminated ? "eliminated" : ""}`;
+    box.className = `opponent-box ${isPlayerTurn ? "turn-active" : ""} ${p.eliminated ? "eliminated" : ""} ${isWaiting ? "waiting" : ""}`;
 
     let cardsLayout = "";
-    for (let i = 0; i < p.cardCount; i++) {
-      cardsLayout += `<div class="card-back" style="width: 1.2rem; height: 1.8rem; border-radius: 2px; display: inline-block; margin-right: 2px;"></div>`;
+    if (isWaiting) {
+      cardsLayout = `<span class="text-small text-muted italic">Waiting...</span>`;
+    } else {
+      for (let i = 0; i < p.cardCount; i++) {
+        cardsLayout += `<div class="card-back" style="width: 1.2rem; height: 1.8rem; border-radius: 2px; display: inline-block; margin-right: 2px;"></div>`;
+      }
     }
 
     box.innerHTML = `
