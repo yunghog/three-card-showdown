@@ -119,16 +119,34 @@
         </div>
 
         <!-- Interaction Controls -->
-        <div class="flex gap-1">
+        <div class="flex gap-1 items-center">
           <button id="play-btn" class="btn btn-primary" disabled>
             Play Selected
           </button>
           <button id="show-btn" class="btn btn-danger" disabled>
             Call SHOW
           </button>
+          <div class="emoji-reaction-wrapper">
+            <button id="emoji-toggle-btn" class="btn btn-emoji" type="button" title="Send Reaction">
+              😄
+            </button>
+            <div id="emoji-picker" class="emoji-picker hidden">
+              <button class="emoji-option" data-emoji="😂">😂</button>
+              <button class="emoji-option" data-emoji="🔥">🔥</button>
+              <button class="emoji-option" data-emoji="😭">😭</button>
+              <button class="emoji-option" data-emoji="👏">👏</button>
+              <button class="emoji-option" data-emoji="💀">💀</button>
+              <button class="emoji-option" data-emoji="🤡">🤡</button>
+              <button class="emoji-option" data-emoji="😤">😤</button>
+              <button class="emoji-option" data-emoji="🎉">🎉</button>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
+
+    <!-- Floating Emoji Overlay (full-screen, pointer-events: none) -->
+    <div id="emoji-float-container" class="emoji-float-container"></div>
 
     <!-- Show Results Modal Screen Overlay -->
     <div id="result-modal" class="modal hidden">
