@@ -4,7 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Fetch landing page dynamic configuration
   fetch("config/landing-page.json")
     .then((response) => {
-      if (!response.ok) throw new Error("Failed to load landing page configuration.");
+      if (!response.ok)
+        throw new Error("Failed to load landing page configuration.");
       return response.json();
     })
     .then((config) => {
@@ -20,12 +21,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Dynamic HTML Renderer driven by landing-page.json
 function renderLandingPage(config) {
-  const { sectionsVisibility, branding, navigation, features, howToPlaySteps, leaderboard, testimonials, faqs, footer } = config;
+  const {
+    sectionsVisibility,
+    branding,
+    navigation,
+    features,
+    howToPlaySteps,
+    leaderboard,
+    testimonials,
+    faqs,
+    footer,
+  } = config;
 
   // 1. Branding Updates
   if (branding) {
     document.title = `${branding.logoTextPrefix}${branding.logoTextHighlight} | Premium Points Game`;
-    
+
     // Logo render
     const logoContainers = document.querySelectorAll(".logo");
     logoContainers.forEach((logo) => {
@@ -59,7 +70,8 @@ function renderLandingPage(config) {
     if (ctaBannerTitle) ctaBannerTitle.textContent = branding.ctaBannerTitle;
 
     const ctaBannerDesc = document.querySelector(".cta-banner p");
-    if (ctaBannerDesc) ctaBannerDesc.textContent = branding.ctaBannerDescription;
+    if (ctaBannerDesc)
+      ctaBannerDesc.textContent = branding.ctaBannerDescription;
 
     const ctaBannerBtn = document.querySelector(".cta-banner button");
     if (ctaBannerBtn) ctaBannerBtn.textContent = branding.ctaBannerButtonText;
@@ -126,7 +138,9 @@ function renderLandingPage(config) {
   }
 
   // 5. Leaderboard table rows render
-  const leaderboardTableBody = document.getElementById("leaderboard-table-body");
+  const leaderboardTableBody = document.getElementById(
+    "leaderboard-table-body",
+  );
   if (leaderboardTableBody && leaderboard) {
     leaderboardTableBody.innerHTML = "";
     leaderboard.forEach((user) => {
@@ -202,10 +216,11 @@ function renderLandingPage(config) {
     toggleSection("leaderboard", sectionsVisibility.leaderboard);
     toggleSection("testimonials", sectionsVisibility.testimonials);
     toggleSection("faq", sectionsVisibility.faq);
-    
+
     const ctaBanner = document.querySelector(".cta-banner-section");
     if (ctaBanner) {
-      ctaBanner.style.display = sectionsVisibility.ctaBanner === false ? "none" : "";
+      ctaBanner.style.display =
+        sectionsVisibility.ctaBanner === false ? "none" : "";
     }
   }
 }
@@ -214,7 +229,7 @@ function renderLandingPage(config) {
 function initializeInteractions() {
   const lobbyScreen = document.getElementById("lobby-screen");
   const usernameInput = document.getElementById("username");
-  const roomIdInput = document.getElementById("room-id");
+  // const roomIdInput = document.getElementById("room-id");
   const joinForm = document.getElementById("join-form");
 
   // 1. Lobby Modal toggles
@@ -249,11 +264,13 @@ function initializeInteractions() {
     joinForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const username = usernameInput.value.trim();
-      const roomId = roomIdInput.value.trim();
+      // const roomId = roomIdInput.value.trim();
 
-      if (username && roomId) {
+      if (username) {
         // Redirection with URL params to separated game screen
-        window.location.href = `/game.html?username=${encodeURIComponent(username)}&room=${encodeURIComponent(roomId)}`;
+        // window.location.href = `/game.html?username=${encodeURIComponent(username)}&room=${encodeURIComponent(roomId)}`;
+        localStorage.setItem("playerUsername", username);
+        window.location.href = "/rooms.html";
       }
     });
   }
@@ -296,8 +313,8 @@ function initializeInteractions() {
       },
       {
         threshold: 0.08,
-        rootMargin: "0px 0px -40px 0px"
-      }
+        rootMargin: "0px 0px -40px 0px",
+      },
     );
     revealElements.forEach((el) => revealObserver.observe(el));
   }
@@ -402,9 +419,10 @@ function initCanvasParticles() {
       this.size = Math.random() * 2.5 + 0.5;
       this.speedY = -(Math.random() * 0.8 + 0.2);
       this.speedX = Math.sin(Math.random() * Math.PI) * 0.15;
-      this.color = Math.random() > 0.6 
-        ? "rgba(212, 175, 55, " + (Math.random() * 0.4 + 0.1) + ")"
-        : "rgba(56, 189, 248, " + (Math.random() * 0.3 + 0.05) + ")";
+      this.color =
+        Math.random() > 0.6
+          ? "rgba(212, 175, 55, " + (Math.random() * 0.4 + 0.1) + ")"
+          : "rgba(56, 189, 248, " + (Math.random() * 0.3 + 0.05) + ")";
       this.swaySpeed = Math.random() * 0.02 + 0.005;
       this.swayValue = Math.random() * Math.PI;
     }
@@ -444,8 +462,12 @@ function initCanvasParticles() {
     ctx.shadowBlur = 0;
 
     const grad = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height * 0.3, 10,
-      canvas.width / 2, canvas.height * 0.3, Math.max(canvas.width, canvas.height)
+      canvas.width / 2,
+      canvas.height * 0.3,
+      10,
+      canvas.width / 2,
+      canvas.height * 0.3,
+      Math.max(canvas.width, canvas.height),
     );
     grad.addColorStop(0, "#0a101f");
     grad.addColorStop(1, "#05060b");
@@ -462,7 +484,7 @@ function initCanvasParticles() {
 
   animate();
 
-  stopCanvasEngine = function() {
+  stopCanvasEngine = function () {
     isCanvasActive = false;
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
