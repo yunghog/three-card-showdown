@@ -413,6 +413,14 @@ body {
   box-shadow: 0 0 10px var(--primary);
 }
 
+.player-badge.waiting,
+.opponent-box.waiting,
+.waiting-player {
+  opacity: 0.4;
+  filter: grayscale(1);
+  pointer-events: none;
+}
+
 /* Game Log Box */
 #log-box {
   background-color: rgba(15, 23, 42, 0.5);
