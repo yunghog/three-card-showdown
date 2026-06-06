@@ -257,18 +257,20 @@ io.on("connection", (socket) => {
 
     const room = rooms[roomId];
 
-    // Prevent joining if game has already started
-    if (room.status !== "lobby") {
-      socket.emit("errorMsg", "Game has already started in this room.");
+    // Prevent joining if game is already over
+    if (room.status === "game_over") {
+      socket.emit("errorMsg", "Game has already ended in this room.");
       return;
     }
+
+    const isRunning = room.status !== "lobby";
 
     // Add player to room
     const player = {
       id: socket.id,
       username: username,
       hand: [],
-      totalScore: 0,
+      totalScore: isRunning ? 15 * room.roundNumber : 0,
       eliminated: false,
       activeInRound: false,
     };
@@ -290,6 +292,7 @@ io.on("connection", (socket) => {
 
     room.status = "playing";
     room.roundNumber = 1;
+    room.roundStarterIndex = 0;
 
     // Reset all scores for new tournament
     room.players.forEach((p) => {
@@ -507,8 +510,25 @@ function startNewRound(room) {
   room.discardPile.push(starterCard);
   room.lastPlayRank = starterCard.rank; // Starts matched to open card
 
-  // Turn index set to first active player
-  room.currentTurnIndex = room.players.findIndex((p) => !p.eliminated);
+  // Ensure roundStarterIndex is valid and within bounds
+  if (room.roundStarterIndex === undefined) {
+    room.roundStarterIndex = 0;
+  } else if (room.players.length > 0) {
+    room.roundStarterIndex = room.roundStarterIndex % room.players.length;
+  }
+
+  // Find the first non-eliminated player starting from the current roundStarterIndex
+  let starterIndex = room.roundStarterIndex;
+  let attempts = 0;
+  while (room.players[starterIndex].eliminated && attempts < room.players.length) {
+    starterIndex = (starterIndex + 1) % room.players.length;
+    attempts++;
+  }
+
+  room.currentTurnIndex = starterIndex;
+
+  // Prepare starter index for the next round (cycles through all players one by one)
+  room.roundStarterIndex = (room.roundStarterIndex + 1) % room.players.length;
 
   logToRoom(room, `--- Round ${room.roundNumber} Started ---`);
   logToRoom(
