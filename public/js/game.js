@@ -179,6 +179,17 @@ socket.on("gameStateUpdate", (state) => {
   if (state.status === "playing" && previousGameStatus !== "playing") {
     roundStartSound.currentTime = 0;
     roundStartSound.play().catch(() => {});
+    const gameBrand = document.getElementById("game-brand");
+    if (gameBrand) {
+      gameBrand.classList.remove("round-begins");
+      void gameBrand.offsetWidth;
+      gameBrand.classList.add("round-begins");
+      gameBrand.addEventListener(
+        "animationend",
+        () => gameBrand.classList.remove("round-begins"),
+        { once: true },
+      );
+    }
   }
   if (
     firstStateReceived &&

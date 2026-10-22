@@ -40,10 +40,17 @@ function renderLandingPage(config) {
     // Logo render
     const logoContainers = document.querySelectorAll(".logo");
     logoContainers.forEach((logo) => {
-      logo.innerHTML = `
-        <span class="logo-mark" aria-hidden="true"><i data-lucide="${branding.logoIcon || "layers"}"></i></span>
-        <span class="logo-text">${branding.logoTextPrefix}<span class="text-gold">${branding.logoTextHighlight}</span></span>
-      `;
+      if (logo.classList.contains("footer-logo")) {
+        logo.innerHTML = `
+          <img class="footer-brand-image" src="/assets/images/logo.png" alt="" />
+          <span class="logo-text">${branding.logoTextPrefix}<span class="text-gold">${branding.logoTextHighlight}</span></span>
+        `;
+      } else {
+        logo.innerHTML = `
+          <img class="header-brand-image" src="/assets/images/logo.png" alt="" />
+          <span class="logo-text">${branding.logoTextPrefix}<span class="text-gold">${branding.logoTextHighlight}</span></span>
+        `;
+      }
     });
 
     // Hero content render
