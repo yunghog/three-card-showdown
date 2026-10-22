@@ -25,6 +25,7 @@ app.get("/admin", (req, res) => {
 
 // Game State Storage
 const rooms = {};
+const RECONNECT_GRACE_MS = 2500;
 
 const SUITS = ["♠", "♥", "♦", "♣"];
 const RANKS = [
@@ -83,8 +84,9 @@ function calculateHandScore(hand) {
 // ===============================
 
 function getCurrentTurnPlayer(room) {
-  return room.players[room.currentTurnIndex]
-    ? room.players[room.currentTurnIndex].username
+  const currentPlayer = room.players[room.currentTurnIndex];
+  return currentPlayer?.activeInRound && !currentPlayer.eliminated
+    ? currentPlayer.username
     : "N/A";
 }
 
@@ -156,7 +158,10 @@ function buildAdminRoomState(room) {
 
       eliminated: player.eliminated,
 
-      isCurrentTurn: room.players[room.currentTurnIndex]?.id === player.id,
+      isCurrentTurn:
+        player.activeInRound &&
+        !player.eliminated &&
+        room.players[room.currentTurnIndex]?.id === player.id,
 
       hand: player.hand,
     })),
@@ -236,10 +241,14 @@ io.on("connection", (socket) => {
     socket.emit("adminRoomStateUpdate", buildAdminRoomState(room));
   });
   // Create or Join Room
-  socket.on("joinRoom", ({ username, roomId }) => {
-    if (!username || !roomId) return;
-
-    socket.join(roomId);
+  socket.on("joinRoom", ({ username, roomId, playerToken } = {}) => {
+    username = typeof username === "string" ? username.trim() : "";
+    roomId = typeof roomId === "string" ? roomId.trim() : "";
+    playerToken = typeof playerToken === "string" ? playerToken : "";
+    if (!username || !roomId || playerToken.length < 20 || playerToken.length > 128) {
+      socket.emit("errorMsg", "Unable to join: missing or invalid player identity.");
+      return;
+    }
 
     if (!rooms[roomId]) {
       rooms[roomId] = {
@@ -252,6 +261,7 @@ io.on("connection", (socket) => {
         currentTurnIndex: 0,
         logs: [],
         roundNumber: 1,
+        winner: null,
       };
     }
 
@@ -263,20 +273,64 @@ io.on("connection", (socket) => {
       return;
     }
 
+    const normalizedUsername = username.toLocaleLowerCase();
+    const returningPlayer = room.players.find((p) => p.reconnectToken === playerToken);
+    if (returningPlayer) {
+      if (returningPlayer.username.toLocaleLowerCase() !== normalizedUsername) {
+        socket.emit("errorMsg", "This reconnect session belongs to a different username.");
+        return;
+      }
+      if (returningPlayer.disconnectTimer) {
+        clearTimeout(returningPlayer.disconnectTimer);
+        returningPlayer.disconnectTimer = null;
+      }
+      const previousSocketId = returningPlayer.id;
+      returningPlayer.id = socket.id;
+      if (room.showResults) remapPlayerInResults(room.showResults, previousSocketId, socket.id);
+      socket.join(roomId);
+      if (previousSocketId !== socket.id) io.sockets.sockets.get(previousSocketId)?.disconnect(true);
+      logToRoom(room, `${returningPlayer.username} reconnected.`);
+      updateRoomState(roomId);
+      broadcastAdminRoomUpdates();
+      return;
+    }
+
+    const duplicateName = room.players.find(
+      (p) => p.username.trim().toLocaleLowerCase() === normalizedUsername,
+    );
+    if (duplicateName) {
+      socket.emit("errorMsg", "That username is already in use in this room.");
+      return;
+    }
+
+    socket.join(roomId);
+
     const isRunning = room.status !== "lobby";
+    // roundNumber is the round currently being played (or the next round
+    // while the room is at round_end), so only roundNumber - 1 rounds have
+    // been completed when a player joins mid-game.
+    const completedRounds = Math.max(0, room.roundNumber - 1);
 
     // Add player to room
     const player = {
       id: socket.id,
+      reconnectToken: playerToken,
+      disconnectTimer: null,
       username: username,
       hand: [],
-      totalScore: isRunning ? 15 * room.roundNumber : 0,
+      totalScore: isRunning ? 15 * completedRounds : 0,
       eliminated: false,
       activeInRound: false,
     };
     room.players.push(player);
 
     logToRoom(room, `${username} joined the room.`);
+    if (isRunning) {
+      socket.emit("playerJoinedNotice", {
+        username,
+        waitingForNextRound: true,
+      });
+    }
     updateRoomState(roomId);
     broadcastAdminRoomUpdates();
   });
@@ -293,6 +347,7 @@ io.on("connection", (socket) => {
     room.status = "playing";
     room.roundNumber = 1;
     room.roundStarterIndex = 0;
+    room.winner = null;
 
     // Reset all scores for new tournament
     room.players.forEach((p) => {
@@ -326,7 +381,7 @@ io.on("connection", (socket) => {
     if (!room || room.status !== "playing") return;
 
     const player = room.players[room.currentTurnIndex];
-    if (player.id !== socket.id) {
+    if (!player || !player.activeInRound || player.eliminated || player.id !== socket.id) {
       socket.emit("errorMsg", "It is not your turn!");
       return;
     }
@@ -405,7 +460,7 @@ io.on("connection", (socket) => {
     if (!room || room.status !== "playing") return;
 
     const caller = room.players[room.currentTurnIndex];
-    if (caller.id !== socket.id) {
+    if (!caller || !caller.activeInRound || caller.eliminated || caller.id !== socket.id) {
       socket.emit("errorMsg", "You can only call SHOW on your turn.");
       return;
     }
@@ -443,12 +498,18 @@ io.on("connection", (socket) => {
       currentTurnIndex: 0,
       logs: [],
       roundNumber: 1,
+      winner: null,
     };
 
     callback({
       roomId,
     });
   });
+
+  socket.on("leaveRoom", ({ roomId, playerToken } = {}) => {
+    schedulePlayerRemoval(roomId, playerToken, socket.id);
+  });
+
   // Disconnect Handling
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
@@ -458,36 +519,80 @@ io.on("connection", (socket) => {
       console.log(`Admin disconnected: ${socket.id}`);
     }
     for (const roomId in rooms) {
-      const room = rooms[roomId];
-      const playerIndex = room.players.findIndex((p) => p.id === socket.id);
-      if (playerIndex !== -1) {
-        const username = room.players[playerIndex].username;
-        room.players.splice(playerIndex, 1);
-        logToRoom(room, `${username} disconnected.`);
-
-        if (room.players.length === 0) {
-          delete rooms[roomId];
-        } else {
-          if (room.status === "playing") {
-            // End round or adjust turns safely
-            if (room.currentTurnIndex >= room.players.length) {
-              room.currentTurnIndex = 0;
-            }
-            // Check if game can continue
-            const activePlayers = room.players.filter((p) => !p.eliminated);
-            if (activePlayers.length < 2) {
-              room.status = "game_over";
-              logToRoom(room, "Not enough players remaining. Game Over.");
-            }
-          }
-          updateRoomState(roomId);
-          broadcastAdminRoomUpdates();
-        }
-        break;
-      }
+      const player = rooms[roomId].players.find((p) => p.id === socket.id);
+      if (!player) continue;
+      if (player.reconnectToken) schedulePlayerRemoval(roomId, player.reconnectToken, socket.id);
+      else removePlayerFromRoom(roomId, null, socket.id);
+      break;
     }
   });
 });
+
+function schedulePlayerRemoval(roomId, playerToken, socketId) {
+  const room = rooms[roomId];
+  if (!room || typeof playerToken !== "string") return;
+  const player = room.players.find(
+    (candidate) => candidate.reconnectToken === playerToken && candidate.id === socketId,
+  );
+  if (!player) return;
+
+  if (player.disconnectTimer) clearTimeout(player.disconnectTimer);
+  player.disconnectTimer = setTimeout(() => {
+    removePlayerFromRoom(roomId, playerToken, socketId);
+  }, RECONNECT_GRACE_MS);
+  player.disconnectTimer.unref?.();
+}
+
+function removePlayerFromRoom(roomId, playerToken, expectedSocketId) {
+  const room = rooms[roomId];
+  if (!room) return;
+  const playerIndex = room.players.findIndex((candidate) =>
+    playerToken
+      ? candidate.reconnectToken === playerToken && candidate.id === expectedSocketId
+      : candidate.id === expectedSocketId,
+  );
+  if (playerIndex === -1) return;
+
+  const [player] = room.players.splice(playerIndex, 1);
+  if (player.disconnectTimer) clearTimeout(player.disconnectTimer);
+  logToRoom(room, `${player.username} left the room.`);
+
+  if (room.players.length === 0) {
+    delete rooms[roomId];
+    broadcastAdminRoomUpdates();
+    return;
+  }
+
+  if (playerIndex < room.currentTurnIndex) room.currentTurnIndex -= 1;
+  if (room.currentTurnIndex >= room.players.length) room.currentTurnIndex = 0;
+
+  const remainingPlayers = room.players.filter((candidate) => !candidate.eliminated);
+  if (room.status !== "lobby" && room.status !== "game_over" && remainingPlayers.length <= 1) {
+    room.status = "game_over";
+    room.winner = remainingPlayers[0]?.username || null;
+    room.showResults = null;
+    logToRoom(
+      room,
+      room.winner
+        ? `🏆 Game Over! ${room.winner} wins as the last remaining player.`
+        : "Game Over! No players remain.",
+    );
+  }
+
+  updateRoomState(roomId);
+  broadcastAdminRoomUpdates();
+}
+
+function remapPlayerInResults(results, previousId, nextId) {
+  if (results.callerId === previousId) results.callerId = nextId;
+  results.scores?.forEach((score) => {
+    if (score.id === previousId) score.id = nextId;
+  });
+  if (Object.prototype.hasOwnProperty.call(results.penalties || {}, previousId)) {
+    results.penalties[nextId] = results.penalties[previousId];
+    delete results.penalties[previousId];
+  }
+}
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
@@ -504,7 +609,13 @@ function startNewRound(room) {
 
   if (activePlayers.length < 2) {
     room.status = "game_over";
-    logToRoom(room, "Game over! Not enough players left.");
+    room.winner = activePlayers[0]?.username || null;
+    logToRoom(
+      room,
+      room.winner
+        ? `🏆 Game Over! ${room.winner} wins as the last remaining player.`
+        : "Game over! No players remain.",
+    );
     updateRoomState(room.id);
     broadcastAdminRoomUpdates();
     return;
@@ -536,7 +647,10 @@ function startNewRound(room) {
   // Find the first non-eliminated player starting from the current roundStarterIndex
   let starterIndex = room.roundStarterIndex;
   let attempts = 0;
-  while (room.players[starterIndex].eliminated && attempts < room.players.length) {
+  while (
+    (!room.players[starterIndex].activeInRound || room.players[starterIndex].eliminated) &&
+    attempts < room.players.length
+  ) {
     starterIndex = (starterIndex + 1) % room.players.length;
     attempts++;
   }
@@ -567,14 +681,15 @@ function reshuffleDiscardPile(room) {
   );
 }
 
-// Pass turn to next non-eliminated player
+// Pass turn to the next player dealt into this round.
 function advanceTurn(room) {
   let attempts = 0;
   do {
     room.currentTurnIndex = (room.currentTurnIndex + 1) % room.players.length;
     attempts++;
   } while (
-    room.players[room.currentTurnIndex].eliminated &&
+    (!room.players[room.currentTurnIndex].activeInRound ||
+      room.players[room.currentTurnIndex].eliminated) &&
     attempts < room.players.length
   );
 }
@@ -667,9 +782,11 @@ function evaluateShow(room, caller) {
     const finalWinner = remainingPlayers[0]
       ? remainingPlayers[0].username
       : "No one (Tie)";
+    room.winner = remainingPlayers[0]?.username || null;
     logToRoom(room, `🏆 Game Over! The winner is ${finalWinner}.`);
   } else {
     room.status = "round_end";
+    room.winner = null;
     room.roundNumber += 1;
   }
 
@@ -688,6 +805,7 @@ function updateRoomState(roomId) {
     const cleanRoomState = {
       id: room.id,
       status: room.status,
+      winner: room.winner || null,
       discardPile: room.discardPile,
       topDiscardCard: room.discardPile[room.discardPile.length - 1] || null,
       lastPlayRank: room.lastPlayRank,

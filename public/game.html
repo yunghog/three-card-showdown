@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Three Card Showdown | Arena Board</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/icons.css" />
+    <link rel="stylesheet" href="css/custom-cursor.css" />
   </head>
 
   <body
@@ -86,7 +88,7 @@
             type="button"
           >
             <span class="text-bold"
-              ><span class="logo-emoji">📋</span> Battle Logs</span
+              ><i data-lucide="scroll-text" class="inline-icon" aria-hidden="true"></i> Battle Logs</span
             >
             <span id="logs-toggle-icon" class="text-bold">▲</span>
           </button>
@@ -127,7 +129,12 @@
             Call SHOW
           </button>
           <div class="emoji-reaction-wrapper">
-            <button id="emoji-toggle-btn" class="btn btn-emoji" type="button" title="Send Reaction">
+            <button
+              id="emoji-toggle-btn"
+              class="btn btn-emoji"
+              type="button"
+              title="Send Reaction"
+            >
               😄
             </button>
             <div id="emoji-picker" class="emoji-picker hidden">
@@ -190,7 +197,10 @@
 
     <!-- Socket IO Client Script Link -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="vendor/lucide.min.js"></script>
+    <script src="js/lucide-render.js"></script>
     <!-- Standalone Game Controller -->
     <script src="js/game.js" type="module"></script>
+    <script src="js/luxury-motion.js"></script>
   </body>
 </html>

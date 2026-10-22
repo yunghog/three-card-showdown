@@ -41,7 +41,7 @@ function renderLandingPage(config) {
     const logoContainers = document.querySelectorAll(".logo");
     logoContainers.forEach((logo) => {
       logo.innerHTML = `
-        <span class="logo-emoji">${branding.logoEmoji}</span>
+        <span class="logo-mark" aria-hidden="true"><i data-lucide="${branding.logoIcon || "layers"}"></i></span>
         <span class="logo-text">${branding.logoTextPrefix}<span class="text-gold">${branding.logoTextHighlight}</span></span>
       `;
     });
@@ -111,7 +111,7 @@ function renderLandingPage(config) {
       const card = document.createElement("div");
       card.className = "glass-panel feature-card scroll-reveal";
       card.innerHTML = `
-        <div class="feature-icon">${feat.icon}</div>
+        <div class="feature-icon" aria-hidden="true"><i data-lucide="${feat.icon}"></i></div>
         <h3 class="text-gold">${feat.title}</h3>
         <p class="text-muted text-small m-0">${feat.description}</p>
       `;
@@ -129,7 +129,7 @@ function renderLandingPage(config) {
       item.innerHTML = `
         <div class="timeline-badge">${step.step}</div>
         <div class="timeline-content glass-panel">
-          <h3 class="text-gold m-0 mb-0-5">${step.title}</h3>
+          <h3 class="text-gold m-0 mb-0-5"><i data-lucide="${step.icon || "circle"}" class="inline-icon" aria-hidden="true"></i>${step.title}</h3>
           <p class="text-muted text-small m-0">${step.description}</p>
         </div>
       `;
@@ -164,8 +164,10 @@ function renderLandingPage(config) {
     testimonials.forEach((test) => {
       const card = document.createElement("div");
       card.className = "glass-panel feature-card scroll-reveal";
+      const ratingCount = Math.max(0, Math.min(5, Number(test.rating) || 5));
+      const ratingIcons = Array.from({ length: ratingCount }, () => '<i data-lucide="star" aria-hidden="true"></i>').join("");
       card.innerHTML = `
-        <div class="testimonial-rating">${test.rating}</div>
+        <div class="testimonial-rating" aria-label="${ratingCount} out of 5 stars">${ratingIcons}</div>
         <p class="italic text-small text-muted mb-1">"${test.quote}"</p>
         <div class="text-bold text-gold text-small">— ${test.author}</div>
       `;
@@ -223,6 +225,8 @@ function renderLandingPage(config) {
         sectionsVisibility.ctaBanner === false ? "none" : "";
     }
   }
+
+  if (window.refreshLucideIcons) window.refreshLucideIcons();
 }
 
 // Wire up client transitions, scroll reveals, accordions, and overlays

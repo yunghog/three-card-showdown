@@ -4,11 +4,13 @@
     <title>Three Card Showdown Rooms</title>
 
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/icons.css" />
+    <link rel="stylesheet" href="css/custom-cursor.css" />
   </head>
 
   <body class="bg-dark text-light">
     <div class="max-w-md m-auto p-2">
-      <h1 class="text-center text-gold-gradient">🎴 Game Rooms</h1>
+      <h1 class="text-center text-gold-gradient"><i data-lucide="layers" class="inline-icon" aria-hidden="true"></i>Game Rooms</h1>
 
       <div class="glass-panel p-2 mb-2">
         <div class="input-group">
@@ -30,7 +32,10 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="vendor/lucide.min.js"></script>
+    <script src="js/lucide-render.js"></script>
 
     <script src="js/rooms.js"></script>
+    <script src="js/luxury-motion.js"></script>
   </body>
 </html>

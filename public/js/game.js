@@ -3,6 +3,7 @@ const socket = io();
 // Client state variables
 let myId = null;
 let currentRoom = null;
+let playerToken = null;
 let gameState = null;
 let selectedCards = []; // Tracks ids of hand cards selected to play
 let previousGameStatus = null;
@@ -113,7 +114,19 @@ socket.on("connect", () => {
   const roomId = urlParams.get("room");
 
   if (username && roomId) {
-    socket.emit("joinRoom", { username, roomId });
+    if (!playerToken) {
+      const tokenKey = `three-card-player:${roomId}:${username.trim().toLocaleLowerCase()}`;
+      const navigationType = performance.getEntriesByType("navigation")[0]?.type;
+      if (navigationType !== "reload") sessionStorage.removeItem(tokenKey);
+      playerToken = sessionStorage.getItem(tokenKey);
+      if (!playerToken) {
+        playerToken = crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+        sessionStorage.setItem(tokenKey, playerToken);
+      }
+    }
+    socket.emit("joinRoom", { username, roomId, playerToken });
   } else {
     // Fallback: safe redirect to main entry page if credentials missing
     window.location.href = "/";
@@ -124,13 +137,45 @@ socket.on("connect", () => {
 socket.on("errorMsg", (msg) => {
   alert(msg);
   // Only redirect for critical errors (game already started)
-  if (msg.includes("already started")) {
+  if (msg.includes("already started") || msg.includes("already ended")) {
     window.location.href = "/";
+  } else if (msg.includes("already in use")) {
+    window.location.href = "/rooms.html";
+  }
+});
+
+// Refreshes reconnect with the same session token; actual exits are removed
+// by the server after a short reconnect window.
+window.addEventListener("pagehide", () => {
+  if (currentRoom && playerToken && socket.connected) {
+    socket.emit("leaveRoom", { roomId: currentRoom, playerToken });
   }
 });
 
 // Listener: Central State Synced from Server
 socket.on("gameStateUpdate", (state) => {
+  // Existing players learn about arrivals from the authoritative room state.
+  // Skip the first snapshot so reconnects/initial loads do not announce everyone.
+  if (gameState && gameState.id === state.id) {
+    const knownPlayerIds = new Set(gameState.players.map((player) => player.id));
+    const newlyJoinedPlayers = state.players.filter(
+      (player) => !knownPlayerIds.has(player.id),
+    );
+    if (newlyJoinedPlayers.length === 1) {
+      showAnnouncement(
+        "PLAYER JOINED",
+        `${newlyJoinedPlayers[0].username} joined the game.`,
+        3000,
+      );
+    } else if (newlyJoinedPlayers.length > 1) {
+      showAnnouncement(
+        "PLAYERS JOINED",
+        `${newlyJoinedPlayers.length} players joined the game.`,
+        3000,
+      );
+    }
+  }
+
   if (state.status === "playing" && previousGameStatus !== "playing") {
     roundStartSound.currentTime = 0;
     roundStartSound.play().catch(() => {});
@@ -177,7 +222,10 @@ socket.on("gameStateUpdate", (state) => {
   const me = state.players.find((p) => p.id === myId);
   const myTurnIndex = state.players.findIndex((p) => p.id === myId);
   const isMyTurn =
-    state.currentTurnIndex === myTurnIndex && state.status === "playing";
+    state.currentTurnIndex === myTurnIndex &&
+    state.status === "playing" &&
+    Boolean(me?.activeInRound) &&
+    !me?.eliminated;
   if (isMyTurn && !previousIsMyTurn) {
     yourTurnSound.currentTime = 0;
 
@@ -235,6 +283,17 @@ socket.on("gameStateUpdate", (state) => {
   // Handle Show results display
   if (state.status === "round_end" || state.status === "game_over") {
     renderShowResultsModal(state);
+  }
+});
+
+// Let a late-arriving player know they are queued for the next round.
+socket.on("playerJoinedNotice", ({ username, waitingForNextRound }) => {
+  if (waitingForNextRound) {
+    showAnnouncement(
+      "YOU JOINED",
+      `Welcome, ${username}. You’ll be dealt in when the next round starts.`,
+      3500,
+    );
   }
 });
 socket.on("cardDiscarded", (data) => {
@@ -304,7 +363,11 @@ function renderOpponents(players, currentTurnIndex, status) {
 
   opponents.forEach((p) => {
     const pIndex = players.findIndex((player) => player.id === p.id);
-    const isPlayerTurn = currentTurnIndex === pIndex && status === "playing";
+    const isPlayerTurn =
+      currentTurnIndex === pIndex &&
+      status === "playing" &&
+      p.activeInRound &&
+      !p.eliminated;
     const isWaiting = !p.activeInRound && status !== "lobby" && !p.eliminated;
 
     const box = document.createElement("div");
@@ -399,24 +462,25 @@ function updateActionControls(isMyTurn) {
 // Helper: Show results calculation layout
 function renderShowResultsModal(state) {
   const results = state.showResults;
-  if (!results) return;
+  const isGameOver = state.status === "game_over";
+  if (!results && !(isGameOver && state.winner)) return;
 
   modalTableBody.innerHTML = "";
-  modalTitle.textContent =
-    state.status === "game_over"
-      ? "🏆 Tournament Game Over!"
-      : "📢 Show Results";
+  modalTitle.innerHTML = `<i data-lucide="${isGameOver ? "trophy" : "scroll-text"}" class="inline-icon" aria-hidden="true"></i>${isGameOver ? "Tournament Game Over!" : "Show Results"}`;
 
-  if (results.isValid) {
-    modalStatus.innerHTML = `✅ <strong>${results.callerUsername}</strong> called a valid show! They had the lowest score.`;
+  if (!results && state.winner) {
+    modalStatus.textContent = `${state.winner} wins as the last player remaining.`;
+    modalStatus.className = "text-center text-primary mb-2";
+  } else if (results.isValid) {
+    modalStatus.innerHTML = `<i data-lucide="circle-check" class="inline-icon" aria-hidden="true"></i><strong>${results.callerUsername}</strong> called a valid show! They had the lowest score.`;
     modalStatus.className = "text-center text-primary mb-2";
   } else {
-    modalStatus.innerHTML = `❌ <strong>${results.callerUsername}</strong> called a WRONG SHOW! (+30 Pts Penalty Applied)`;
+    modalStatus.innerHTML = `<i data-lucide="circle-x" class="inline-icon" aria-hidden="true"></i><strong>${results.callerUsername}</strong> called a WRONG SHOW! (+30 Pts Penalty Applied)`;
     modalStatus.className = "text-center text-danger mb-2";
   }
 
   // Populate dynamic rows values
-  results.scores.forEach((s) => {
+  (results?.scores || []).forEach((s) => {
     // Guard: player may have disconnected between show and render
     const pOrig = state.players.find((p) => p.id === s.id);
     if (!pOrig) return;
@@ -434,7 +498,7 @@ function renderShowResultsModal(state) {
       <td><span class="text-small text-muted">${handHTML}</span></td>
       <td>${s.handScore}</td>
       <td class="text-accent">+${penalty}</td>
-      <td><strong>${totalScore} / 100</strong> ${isEliminated ? "💀" : ""}</td>
+      <td><strong>${totalScore} / 100</strong> ${isEliminated ? '<i data-lucide="user-round-x" class="admin-inline-icon" aria-label="Eliminated"></i>' : ""}</td>
     `;
     modalTableBody.appendChild(row);
   });
@@ -455,6 +519,7 @@ function renderShowResultsModal(state) {
     }
   }
 
+  if (window.refreshLucideIcons) window.refreshLucideIcons(resultModal);
   resultModal.classList.remove("hidden");
 }
 

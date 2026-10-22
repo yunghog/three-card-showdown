@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Three Card Showdown | Premium Multiplayer Points Game</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/icons.css" />
+    <link rel="stylesheet" href="css/letter-glitch-background.css" />
+    <link rel="stylesheet" href="css/custom-cursor.css" />
   </head>
   <body class="bg-dark text-light">
     <!-- Ambient Particle Overlay Canvas -->
     <canvas id="ambient-canvas" class="ambient-canvas"></canvas>
+    <canvas id="letter-glitch-background" class="letter-glitch-background"></canvas>
 
     <!-- Sticky Glassmorphic Header Navigation -->
     <header class="sticky-header">
@@ -261,7 +265,10 @@
           &times;
         </button>
         <div class="text-center">
-          <h2 class="text-gold-gradient m-0 mb-0-5">🎴 Enter Showdown Arena</h2>
+          <h2 class="text-gold-gradient m-0 mb-0-5">
+            <i data-lucide="layers" class="inline-icon" aria-hidden="true"></i
+            >Enter Showdown Arena
+          </h2>
           <p class="text-muted text-small mb-2">
             Create or join a room code to begin matches
           </p>
@@ -299,6 +306,10 @@
     </div>
 
     <!-- Modular JS Script Entry (Main Landing Visual Engine) -->
+    <script src="vendor/lucide.min.js"></script>
+    <script src="js/lucide-render.js"></script>
     <script src="js/main.js" type="module"></script>
+    <script src="js/luxury-motion.js"></script>
+    <script src="js/letter-glitch-background.js"></script>
   </body>
 </html>
