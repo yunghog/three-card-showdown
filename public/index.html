@@ -5,16 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Three Card Showdown | Premium Multiplayer Points Game</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/icons.css" />
+    <link rel="stylesheet" href="css/letter-glitch-background.css" />
+    <link rel="stylesheet" href="css/custom-cursor.css" />
+    <link rel="stylesheet" href="css/landing-intro.css" />
   </head>
-  <body class="bg-dark text-light">
+  <body class="bg-dark text-light intro-active">
+    <div id="landing-intro" class="landing-intro" aria-label="Three Cards Showdown loading">
+      <div class="landing-intro-content">
+        <img src="/assets/images/logo.png" alt="Three Cards Showdown" />
+        <p>Three Cards Showdown</p>
+      </div>
+    </div>
     <!-- Ambient Particle Overlay Canvas -->
     <canvas id="ambient-canvas" class="ambient-canvas"></canvas>
+    <canvas id="letter-glitch-background" class="letter-glitch-background"></canvas>
 
     <!-- Sticky Glassmorphic Header Navigation -->
     <header class="sticky-header">
       <div class="header-container">
         <div class="logo">
-          <!-- Dynamic rendering target -->
+          <img class="header-brand-image" src="/assets/images/logo.png" alt="" />
+          <span class="logo-text">Three Card <span class="text-gold">Showdown</span></span>
         </div>
         <nav class="nav-menu" id="nav-menu">
           <!-- Dynamic navigation links generated here -->
@@ -47,6 +59,11 @@
           class="hero-container grid grid-cols-1 md:grid-cols-2 gap-3 items-center"
         >
           <div class="hero-content scroll-reveal">
+            <img
+              class="hero-brand-image"
+              src="/assets/images/logo.png"
+              alt="Three Cards Showdown logo"
+            />
             <div class="badge badge-accent mb-1 px-2 py-0-5 text-bold">
               Loading Arena Details...
             </div>
@@ -238,7 +255,8 @@
       <footer class="public-footer p-2 text-center border-t">
         <div class="footer-container max-w-md m-auto flex flex-col gap-1">
           <div class="logo footer-logo justify-center">
-            <!-- Dynamic Footer Logo -->
+            <img class="footer-brand-image" src="/assets/images/logo.png" alt="" />
+            <span class="logo-text">Three Card <span class="text-gold">Showdown</span></span>
           </div>
           <div class="footer-links flex justify-center gap-2">
             <!-- Dynamic Navigation Links -->
@@ -261,7 +279,10 @@
           &times;
         </button>
         <div class="text-center">
-          <h2 class="text-gold-gradient m-0 mb-0-5">🎴 Enter Showdown Arena</h2>
+          <h2 class="text-gold-gradient m-0 mb-0-5">
+            <i data-lucide="layers" class="inline-icon" aria-hidden="true"></i
+            >Enter Showdown Arena
+          </h2>
           <p class="text-muted text-small mb-2">
             Create or join a room code to begin matches
           </p>
@@ -299,6 +320,11 @@
     </div>
 
     <!-- Modular JS Script Entry (Main Landing Visual Engine) -->
+    <script src="vendor/lucide.min.js"></script>
+    <script src="js/lucide-render.js"></script>
     <script src="js/main.js" type="module"></script>
+    <script src="js/luxury-motion.js"></script>
+    <script src="js/letter-glitch-background.js"></script>
+    <script src="js/landing-intro.js"></script>
   </body>
 </html>

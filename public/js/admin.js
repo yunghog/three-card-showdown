@@ -324,11 +324,11 @@ function renderPlayers(room) {
         </td>
 
         <td>
-          ${player.isCurrentTurn ? "🎯" : "-"}
+          ${player.isCurrentTurn ? '<i data-lucide="circle-dot" class="admin-inline-icon" aria-label="Current turn"></i>' : "-"}
         </td>
 
         <td>
-          ${player.eliminated ? "💀 Eliminated" : "✅ Active"}
+          ${player.eliminated ? '<i data-lucide="user-round-x" class="admin-inline-icon" aria-hidden="true"></i> Eliminated' : '<i data-lucide="circle-check" class="admin-inline-icon" aria-hidden="true"></i> Active'}
         </td>
 
         <td>
@@ -338,6 +338,8 @@ function renderPlayers(room) {
 
     playersTableBody.appendChild(row);
   });
+
+  if (window.refreshLucideIcons) window.refreshLucideIcons(playersTableBody);
 }
 
 // ======================================

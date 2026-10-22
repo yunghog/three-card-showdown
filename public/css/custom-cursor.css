@@ -1,0 +1,70 @@
+/* Brass cursor and soft lens for devices with a real pointing device. */
+.luxury-cursor,
+.luxury-cursor-halo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 12000;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.luxury-cursor {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e7c98f;
+  box-shadow: 0 0 10px rgba(231, 201, 143, .85), 0 0 22px rgba(196, 255, 77, .25);
+}
+
+.luxury-cursor-halo {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(231, 201, 143, .68);
+  border-radius: 50%;
+  background: rgba(216, 198, 255, .025);
+  box-shadow: 0 0 18px rgba(196, 255, 77, .07), inset 0 0 12px rgba(216, 198, 255, .04);
+  backdrop-filter: blur(1px);
+  transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+
+.luxury-cursor-halo::after {
+  position: absolute;
+  inset: -1px;
+  border: 1px solid rgba(196, 255, 77, 0);
+  border-radius: inherit;
+  content: "";
+}
+
+body.has-luxury-pointer,
+body.has-luxury-pointer * { cursor: none !important; }
+
+body.has-luxury-pointer .luxury-cursor,
+body.has-luxury-pointer .luxury-cursor-halo { opacity: 1; }
+
+body.has-luxury-pointer .luxury-cursor-halo.is-hovering {
+  border-color: rgba(231, 201, 143, .96);
+  background: rgba(196, 255, 77, .075);
+  box-shadow: 0 0 24px rgba(196, 255, 77, .18), inset 0 0 14px rgba(216, 198, 255, .11);
+}
+
+body.has-luxury-pointer .luxury-cursor-halo.is-hovering::after {
+  inset: -7px;
+  border-color: rgba(231, 201, 143, .3);
+  animation: cursor-ripple .7s cubic-bezier(.2,.7,.25,1) infinite alternate;
+}
+
+@keyframes cursor-ripple {
+  from { opacity: .35; transform: scale(.9); }
+  to { opacity: .9; transform: scale(1.08); }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .luxury-cursor, .luxury-cursor-halo { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luxury-cursor-halo.is-hovering::after { animation: none !important; }
+}
