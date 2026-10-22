@@ -35,7 +35,7 @@ function renderLandingPage(config) {
 
   // 1. Branding Updates
   if (branding) {
-    document.title = `${branding.logoTextPrefix}${branding.logoTextHighlight} | Premium Points Game`;
+    document.title = `${branding.logoTextPrefix}${branding.logoTextHighlight} | Online Multiplayer Card Game`;
 
     // Logo render
     const logoContainers = document.querySelectorAll(".logo");

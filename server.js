@@ -9,6 +9,49 @@ const io = new Server(server, {
   cors: { origin: "*" },
 });
 
+function getPublicOrigin(req) {
+  const configuredUrl = process.env.PUBLIC_URL?.trim();
+  const forwardedProtocol = String(req.headers["x-forwarded-proto"] || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  const protocol =
+    forwardedProtocol === "https" || forwardedProtocol === "http"
+      ? forwardedProtocol
+      : req.protocol;
+  const origin = new URL(configuredUrl || `${protocol}://${req.get("host")}`);
+  if (origin.protocol !== "http:" && origin.protocol !== "https:") {
+    throw new Error("PUBLIC_URL must use HTTP or HTTPS.");
+  }
+  return origin.origin;
+}
+
+app.get("/robots.txt", (req, res) => {
+  try {
+    const origin = getPublicOrigin(req);
+    res.type("text/plain").send(
+      `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /admin.html\nDisallow: /api/\nSitemap: ${origin}/sitemap.xml\n`,
+    );
+  } catch (error) {
+    res.status(500).type("text/plain").send("Unable to build crawler directives.");
+  }
+});
+
+app.get("/sitemap.xml", (req, res) => {
+  try {
+    const origin = getPublicOrigin(req);
+    const urls = ["/", "/rooms.html"];
+    const entries = urls
+      .map((route) => `  <url><loc>${origin}${route}</loc></url>`)
+      .join("\n");
+    res
+      .type("application/xml")
+      .send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>`);
+  } catch (error) {
+    res.status(500).type("text/plain").send("Unable to build the sitemap.");
+  }
+});
+
 app.use(express.static(path.join(__dirname, "public")));
 // ===============================
 // ADMIN CONFIGURATION
