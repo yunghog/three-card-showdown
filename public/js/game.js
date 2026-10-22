@@ -482,3 +482,57 @@ if (toggleLogsBtn && logsPanel && logsToggleIcon) {
     }
   });
 }
+
+// ===== Emoji Reaction System =====
+const emojiToggleBtn = document.getElementById("emoji-toggle-btn");
+const emojiPicker = document.getElementById("emoji-picker");
+const emojiFloatContainer = document.getElementById("emoji-float-container");
+
+// Toggle picker open/closed
+emojiToggleBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  emojiPicker.classList.toggle("hidden");
+});
+
+// Close picker when clicking anywhere else
+document.addEventListener("click", (e) => {
+  if (!emojiPicker.contains(e.target) && e.target !== emojiToggleBtn) {
+    emojiPicker.classList.add("hidden");
+  }
+});
+
+// Send emoji on option click
+document.querySelectorAll(".emoji-option").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const emoji = btn.dataset.emoji;
+    if (currentRoom) {
+      socket.emit("emojiReaction", { roomId: currentRoom, emoji });
+    }
+    emojiPicker.classList.add("hidden");
+  });
+});
+
+// Receive and render floating emoji
+socket.on("emojiReaction", ({ emoji, senderName }) => {
+  const bubble = document.createElement("div");
+  bubble.className = "floating-emoji-pop";
+
+  // Random horizontal position across the screen
+  const xPos = Math.random() * 80 + 10; // 10%-90% of viewport width
+  bubble.style.left = `${xPos}%`;
+  bubble.style.bottom = "12%";
+
+  bubble.innerHTML = `
+    <span class="emoji-char">${emoji}</span>
+    <span class="emoji-sender">${senderName}</span>
+  `;
+
+  emojiFloatContainer.appendChild(bubble);
+
+  // Remove from DOM after animation completes
+  bubble.addEventListener("animationend", () => {
+    bubble.remove();
+  });
+});
+

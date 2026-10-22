@@ -413,6 +413,22 @@ io.on("connection", (socket) => {
     evaluateShow(room, caller);
     broadcastAdminRoomUpdates();
   });
+  // Emoji Reaction Broadcast
+  socket.on("emojiReaction", ({ roomId, emoji }) => {
+    const room = rooms[roomId];
+    if (!room) return;
+    const player = room.players.find((p) => p.id === socket.id);
+    if (!player) return;
+
+    // Broadcast to every player in the room (including sender)
+    room.players.forEach((p) => {
+      io.to(p.id).emit("emojiReaction", {
+        emoji,
+        senderName: player.username,
+        senderId: socket.id,
+      });
+    });
+  });
 
   socket.on("createRoom", ({ username }, callback) => {
     const roomId = generateRoomId();
