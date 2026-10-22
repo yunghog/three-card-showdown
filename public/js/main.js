@@ -291,22 +291,29 @@ function initializeInteractions() {
   const navMenu = document.getElementById("nav-menu");
 
   if (mobileNavBtn && navMenu) {
+    const closeMobileMenu = () => {
+      navMenu.classList.remove("mobile-active");
+      mobileNavBtn.classList.remove("open");
+      mobileNavBtn.setAttribute("aria-expanded", "false");
+    };
+
     mobileNavBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      navMenu.classList.toggle("mobile-active");
-      mobileNavBtn.classList.toggle("open");
+      const isOpen = navMenu.classList.toggle("mobile-active");
+      mobileNavBtn.classList.toggle("open", isOpen);
+      mobileNavBtn.setAttribute("aria-expanded", String(isOpen));
     });
 
-    navMenu.querySelectorAll(".nav-link").forEach((link) => {
-      link.addEventListener("click", () => {
-        navMenu.classList.remove("mobile-active");
-        mobileNavBtn.classList.remove("open");
-      });
+    navMenu.addEventListener("click", (event) => {
+      if (event.target.closest(".nav-link")) closeMobileMenu();
     });
 
     document.addEventListener("click", () => {
-      navMenu.classList.remove("mobile-active");
-      mobileNavBtn.classList.remove("open");
+      closeMobileMenu();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeMobileMenu();
     });
   }
 

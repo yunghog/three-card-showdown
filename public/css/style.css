@@ -344,6 +344,7 @@ body {
   flex-direction: column;
   line-height: 1;
   font-weight: bold;
+  text-align: left;
 }
 .card-bottom {
   display: flex;
@@ -2163,6 +2164,62 @@ body:has(#rooms-list) #rooms-list > .glass-panel {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Reliable mobile dropdown for the landing page's Dynamic Island header. */
+@media (max-width: 680px) {
+  body:has(#landing-screen) .sticky-header .nav-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    left: 0;
+    z-index: 30;
+    display: flex;
+    width: auto;
+    height: auto;
+    max-height: 0;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    padding: 0 1rem;
+    border: 1px solid transparent;
+    border-radius: 18px;
+    background: rgba(24, 20, 34, 0.94);
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    visibility: hidden;
+    backdrop-filter: blur(28px) saturate(155%);
+    -webkit-backdrop-filter: blur(28px) saturate(155%);
+    transition:
+      max-height 0.3s ease,
+      padding 0.3s ease,
+      opacity 0.2s ease,
+      transform 0.3s ease,
+      visibility 0.3s ease;
+  }
+
+  body:has(#landing-screen) .sticky-header .nav-menu.mobile-active {
+    max-height: min(60vh, 360px);
+    padding: 0.65rem 1rem;
+    border-color: rgba(255, 255, 255, 0.16);
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  body:has(#landing-screen) .sticky-header .nav-menu .nav-link {
+    display: block;
+    width: 100%;
+    padding: 0.85rem 0.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  body:has(#landing-screen) .sticky-header .nav-menu .nav-link:last-child {
+    border-bottom: 0;
   }
 }
 
