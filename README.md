@@ -1,28 +1,16 @@
 # Three Cards Showdown
 
-```{=html}
 <p align="center">
-```
-`<img src="public/assets/images/social-preview.png" alt="Three Cards Showdown banner" width="100%" />`{=html}
-```{=html}
+
+<img src="public/assets/images/social-preview.png" alt="Three Cards Showdown banner" width="100%" />
 </p>
-```
-```{=html}
 <p align="center">
-```
 A real-time multiplayer card game you can play in your browser with
 friends.
-```{=html}
 </p>
-```
-```{=html}
 <p align="center">
-```
-`<a href="https://three-card.onrender.com/">`{=html}`<strong>`{=html}▶
-Play Now`</strong>`{=html}`</a>`{=html}
-```{=html}
+<a href="https://three-card.onrender.com/"><strong>▶Play Now</strong></a>
 </p>
-```
 ## About the game
 
 **Three Cards Showdown** is a browser-based multiplayer card game built
@@ -31,13 +19,9 @@ and play together in real time.
 
 ## Tech stack
 
--   **HTML5** --- page structure and game interface
--   **CSS3** --- responsive styling, animations, and visual effects
--   **JavaScript** --- client-side interactions and game UI
 -   **Node.js** --- server runtime
 -   **Express.js** --- serves the application and handles HTTP routes
 -   **Socket.IO** --- real-time communication between players
--   **Lucide** --- interface icons
 
 ## Play
 
