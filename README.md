@@ -1,8 +1,72 @@
-# three-card-showdown
-A multiplayer three-card points game where players draw, discard, and strategically manage their hands to achieve the lowest score before calling Show.
+# Three Cards Showdown
 
-## Search and social metadata
+```{=html}
+<p align="center">
+```
+`<img src="public/assets/images/social-preview.png" alt="Three Cards Showdown banner" width="100%" />`{=html}
+```{=html}
+</p>
+```
+```{=html}
+<p align="center">
+```
+A real-time multiplayer card game you can play in your browser with
+friends.
+```{=html}
+</p>
+```
+```{=html}
+<p align="center">
+```
+`<a href="https://three-card.onrender.com/">`{=html}`<strong>`{=html}▶
+Play Now`</strong>`{=html}`</a>`{=html}
+```{=html}
+</p>
+```
+## About the game
 
-The landing page includes page descriptions, focused search terms, Open Graph and Twitter share cards, and structured `WebApplication` data. The room listing has its own title and share description. Private game and admin pages are marked `noindex`.
+**Three Cards Showdown** is a browser-based multiplayer card game built
+for quick, social matches. Create or join a game room, invite friends,
+and play together in real time.
 
-The server exposes `/robots.txt` and `/sitemap.xml` for crawlers. In production, set `PUBLIC_URL` to the public site origin (for example, `https://cards.example.com`) so these endpoints publish the correct absolute URLs. The sitemap includes the landing page and public room directory.
+## Tech stack
+
+-   **HTML5** --- page structure and game interface
+-   **CSS3** --- responsive styling, animations, and visual effects
+-   **JavaScript** --- client-side interactions and game UI
+-   **Node.js** --- server runtime
+-   **Express.js** --- serves the application and handles HTTP routes
+-   **Socket.IO** --- real-time communication between players
+-   **Lucide** --- interface icons
+
+## Play
+
+Visit **[three-card.onrender.com](https://three-card.onrender.com/)** to
+start playing.
+
+## Run locally
+
+1.  Clone this repository.
+
+2.  Install dependencies:
+
+    ``` bash
+    npm install
+    ```
+
+3.  Start the server using the script configured in `package.json`, for
+    example:
+
+    ``` bash
+    npm start
+    ```
+
+4.  Open the local URL printed by the server in your browser.
+
+> The game server must be running for multiplayer features to work.
+
+## Project
+
+This repository contains the game and its web interface. The landing
+page can also be deployed separately as a static site, with its **Play
+Now** link pointing to the live game server.
